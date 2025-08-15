@@ -9,6 +9,9 @@ import TV from "./pages/TV";
 import Radios from "./pages/Radios";
 import VOD from "./pages/VOD";
 import Menu from "./pages/Menu";
+import DVBT2 from "./pages/DVB-T2";
+import Subscription from "./pages/Subscription";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +29,9 @@ const App = () => (
             <Route path="radios" element={<Radios />} />
             <Route path="vod" element={<VOD />} />
             <Route path="menu" element={<Menu />} />
+            <Route path="dvb-t2" element={<DVBT2 />} />
+            <Route path="subscription" element={<Subscription />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

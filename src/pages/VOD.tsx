@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { Search, Play, Star, Clock } from "lucide-react";
+import { Search, Play, Star, Clock, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import VideoPlayer from "@/components/VideoPlayer";
 
 const VOD = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tous");
+  const [selectedContent, setSelectedContent] = useState<any>(null);
+  const [showPlayer, setShowPlayer] = useState(false);
 
   const vodContent = [
     {
@@ -19,7 +22,8 @@ const VOD = () => {
       rating: 4.8,
       year: 2019,
       thumbnail: "https://via.placeholder.com/300x400/F59E0B/FFFFFF?text=Le+Roi+Lion",
-      description: "Simba, un jeune lionceau, doit surmonter la tragédie et défier son oncle pour devenir roi."
+      description: "Simba, un jeune lionceau, doit surmonter la tragédie et défier son oncle pour devenir roi.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
     },
     {
       id: "2",
@@ -30,7 +34,8 @@ const VOD = () => {
       rating: 4.7,
       year: 2022,
       thumbnail: "https://via.placeholder.com/300x400/DC2626/FFFFFF?text=Stranger+Things",
-      description: "Dans les années 80, des événements surnaturels bouleversent la petite ville de Hawkins."
+      description: "Dans les années 80, des événements surnaturels bouleversent la petite ville de Hawkins.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
     },
     {
       id: "3",
@@ -41,7 +46,8 @@ const VOD = () => {
       rating: 4.9,
       year: 2016,
       thumbnail: "https://via.placeholder.com/300x400/059669/FFFFFF?text=Planète+Terre",
-      description: "Une exploration spectaculaire de la nature sauvage de notre planète."
+      description: "Une exploration spectaculaire de la nature sauvage de notre planète.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
     },
     {
       id: "4",
@@ -52,7 +58,8 @@ const VOD = () => {
       rating: 4.6,
       year: 2019,
       thumbnail: "https://via.placeholder.com/300x400/7C3AED/FFFFFF?text=Avengers",
-      description: "Les Avengers tentent de défaire les dégâts causés par Thanos dans Infinity War."
+      description: "Les Avengers tentent de défaire les dégâts causés par Thanos dans Infinity War.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
     },
     {
       id: "5",
@@ -63,7 +70,8 @@ const VOD = () => {
       rating: 4.5,
       year: 2023,
       thumbnail: "https://via.placeholder.com/300x400/1D4ED8/FFFFFF?text=The+Crown",
-      description: "L'histoire de la reine Elizabeth II et de la famille royale britannique."
+      description: "L'histoire de la reine Elizabeth II et de la famille royale britannique.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
     },
     {
       id: "6",
@@ -74,7 +82,8 @@ const VOD = () => {
       rating: 4.8,
       year: 2014,
       thumbnail: "https://via.placeholder.com/300x400/0EA5E9/FFFFFF?text=Cosmos",
-      description: "Un voyage à travers l'espace et le temps pour explorer l'univers."
+      description: "Un voyage à travers l'espace et le temps pour explorer l'univers.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
     }
   ];
 
@@ -85,6 +94,59 @@ const VOD = () => {
     const matchesCategory = selectedCategory === "Tous" || content.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const handleContentClick = (content: any) => {
+    setSelectedContent(content);
+    setShowPlayer(true);
+  };
+
+  if (showPlayer && selectedContent) {
+    return (
+      <div className="min-h-screen bg-black">
+        {/* Player Header */}
+        <div className="flex items-center gap-4 p-4 bg-black/50 text-white">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowPlayer(false)}
+            className="text-white hover:bg-white/20"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-lg font-semibold">{selectedContent.title}</h1>
+            <p className="text-sm text-white/70">{selectedContent.genre} • {selectedContent.year}</p>
+          </div>
+        </div>
+
+        {/* Video Player */}
+        <div className="aspect-video">
+          <VideoPlayer
+            src={selectedContent.videoUrl}
+            title={selectedContent.title}
+            poster={selectedContent.thumbnail}
+            className="w-full h-full"
+          />
+        </div>
+
+        {/* Content Info */}
+        <div className="p-4 text-white">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-1">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-sm">{selectedContent.rating}</span>
+            </div>
+            <span className="text-sm text-white/70">•</span>
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span className="text-sm text-white/70">{selectedContent.duration}</span>
+            </div>
+          </div>
+          <p className="text-white/80">{selectedContent.description}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -176,7 +238,12 @@ const VOD = () => {
                     {content.description}
                   </p>
                   
-                  <Button variant="stream" className="w-full mt-3" size="sm">
+                  <Button 
+                    variant="stream" 
+                    className="w-full mt-3" 
+                    size="sm"
+                    onClick={() => handleContentClick(content)}
+                  >
                     <Play className="w-4 h-4 mr-2" />
                     Regarder
                   </Button>

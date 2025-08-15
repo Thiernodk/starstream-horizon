@@ -3,6 +3,7 @@ import { Search, Play, Pause, Volume2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import AudioPlayer from "@/components/AudioPlayer";
 
 const Radios = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -10,16 +11,16 @@ const Radios = () => {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
 
   const radios = [
-    { id: "1", name: "France Inter", genre: "Généraliste", country: "France", frequency: "87.8 FM" },
-    { id: "2", name: "RTL", genre: "Généraliste", country: "France", frequency: "104.3 FM" },
-    { id: "3", name: "NRJ", genre: "Musique", country: "France", frequency: "100.3 FM" },
-    { id: "4", name: "Skyrock", genre: "Musique", country: "France", frequency: "96.0 FM" },
-    { id: "5", name: "RFI", genre: "International", country: "France", frequency: "89.0 FM" },
-    { id: "6", name: "Jazz Radio", genre: "Jazz", country: "France", frequency: "92.7 FM" },
-    { id: "7", name: "Nostalgie", genre: "Rétro", country: "France", frequency: "90.4 FM" },
-    { id: "8", name: "Fun Radio", genre: "Musique", country: "France", frequency: "101.9 FM" },
-    { id: "9", name: "Europe 1", genre: "Généraliste", country: "France", frequency: "104.7 FM" },
-    { id: "10", name: "Radio Classique", genre: "Classique", country: "France", frequency: "101.1 FM" }
+    { id: "1", name: "France Inter", genre: "Généraliste", country: "France", frequency: "87.8 FM", streamUrl: "https://icecast.radiofrance.fr/franceinter-midfi.mp3" },
+    { id: "2", name: "RTL", genre: "Généraliste", country: "France", frequency: "104.3 FM", streamUrl: "https://streaming.radio.rtl.fr/rtl-1-44-128" },
+    { id: "3", name: "NRJ", genre: "Musique", country: "France", frequency: "100.3 FM", streamUrl: "https://cdn.nrjaudio.fm/audio1/fr/30001/mp3_128.mp3" },
+    { id: "4", name: "Skyrock", genre: "Musique", country: "France", frequency: "96.0 FM", streamUrl: "https://icecast.skyrock.net/s/natio_mp3_128k" },
+    { id: "5", name: "RFI", genre: "International", country: "France", frequency: "89.0 FM", streamUrl: "https://rfi-monde-aac-64.streamakaci.com/rfi_monde.aac" },
+    { id: "6", name: "Jazz Radio", genre: "Jazz", country: "France", frequency: "92.7 FM", streamUrl: "https://broadcast.infomaniak.net/jazzradio-high.mp3" },
+    { id: "7", name: "Nostalgie", genre: "Rétro", country: "France", frequency: "90.4 FM", streamUrl: "https://cdn.nrjaudio.fm/audio1/fr/30601/mp3_128.mp3" },
+    { id: "8", name: "Fun Radio", genre: "Musique", country: "France", frequency: "101.9 FM", streamUrl: "https://streaming.radio.funradio.fr/fun-1-44-128" },
+    { id: "9", name: "Europe 1", genre: "Généraliste", country: "France", frequency: "104.7 FM", streamUrl: "https://europe1.lmn.fm/europe1.mp3" },
+    { id: "10", name: "Radio Classique", genre: "Classique", country: "France", frequency: "101.1 FM", streamUrl: "https://radioclassique.ice.infomaniak.ch/radioclassique-high.mp3" }
   ];
 
   const genres = ["Tous", "Généraliste", "Musique", "International", "Jazz", "Rétro", "Classique"];
@@ -75,27 +76,13 @@ const Radios = () => {
 
         {/* Currently playing */}
         {currentlyPlaying && (
-          <Card className="mb-6 p-4 bg-gradient-primary text-primary-foreground">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold">En cours de lecture</h3>
-                <p className="text-sm opacity-90">
-                  {radios.find(r => r.id === currentlyPlaying)?.name}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Volume2 className="w-5 h-5 animate-pulse" />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setCurrentlyPlaying(null)}
-                  className="bg-white/20 border-white/30 text-white hover:bg-white/30"
-                >
-                  <Pause className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </Card>
+          <div className="mb-6">
+            <AudioPlayer
+              src={radios.find(r => r.id === currentlyPlaying)?.streamUrl || ""}
+              title={radios.find(r => r.id === currentlyPlaying)?.name || ""}
+              artist={radios.find(r => r.id === currentlyPlaying)?.genre || ""}
+            />
+          </div>
         )}
 
         {/* Radio list */}

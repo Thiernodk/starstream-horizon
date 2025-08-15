@@ -1,37 +1,90 @@
 import { useState } from "react";
-import { Search, Filter } from "lucide-react";
+import { Search, ArrowLeft, Tv as TvIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ChannelGrid from "@/components/ChannelGrid";
+import VideoPlayer from "@/components/VideoPlayer";
+import { useM3UParser } from "@/hooks/useM3UParser";
 import channelsBg from "@/assets/channels-bg.jpg";
 
 const TV = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Toutes");
+  const [selectedChannel, setSelectedChannel] = useState<any>(null);
+  const [showPlayer, setShowPlayer] = useState(false);
 
-  // Sample channels data
-  const channels = [
-    { id: "1", name: "CNN International", logo: "https://via.placeholder.com/48x48/DC2626/FFFFFF?text=CNN", category: "Actualités", isLive: true },
-    { id: "2", name: "BBC World News", logo: "https://via.placeholder.com/48x48/1D4ED8/FFFFFF?text=BBC", category: "Actualités", isLive: true },
-    { id: "3", name: "National Geographic", logo: "https://via.placeholder.com/48x48/F59E0B/FFFFFF?text=NG", category: "Documentaires" },
-    { id: "4", name: "Discovery Channel", logo: "https://via.placeholder.com/48x48/059669/FFFFFF?text=DIS", category: "Documentaires" },
-    { id: "5", name: "ESPN", logo: "https://via.placeholder.com/48x48/DC2626/FFFFFF?text=ESPN", category: "Sports", isLive: true },
-    { id: "6", name: "MTV", logo: "https://via.placeholder.com/48x48/7C3AED/FFFFFF?text=MTV", category: "Musique" },
-    { id: "7", name: "Cartoon Network", logo: "https://via.placeholder.com/48x48/F97316/FFFFFF?text=CN", category: "Enfants" },
-    { id: "8", name: "HBO", logo: "https://via.placeholder.com/48x48/1F2937/FFFFFF?text=HBO", category: "Films" },
-    { id: "9", name: "France 24", logo: "https://via.placeholder.com/48x48/1E40AF/FFFFFF?text=F24", category: "Actualités", isLive: true },
-    { id: "10", name: "Canal+", logo: "https://via.placeholder.com/48x48/000000/FFFFFF?text=C+", category: "Films" },
-    { id: "11", name: "Eurosport", logo: "https://via.placeholder.com/48x48/0EA5E9/FFFFFF?text=ES", category: "Sports" },
-    { id: "12", name: "Animal Planet", logo: "https://via.placeholder.com/48x48/16A34A/FFFFFF?text=AP", category: "Documentaires" }
-  ];
+  // Parse M3U playlist from the provided URL
+  const { channels: m3uChannels, loading, error } = useM3UParser("https://iptv-org.github.io/iptv/languages/fra.m3u");
 
-  const categories = ["Toutes", "Actualités", "Sports", "Films", "Documentaires", "Musique", "Enfants"];
+  // Convert M3U channels to our format
+  const channels = m3uChannels.map(channel => ({
+    id: channel.id,
+    name: channel.name,
+    logo: channel.logo,
+    category: channel.group,
+    isLive: true,
+    url: channel.url
+  }));
+
+  // Get unique categories from channels
+  const categories = ["Toutes", ...Array.from(new Set(channels.map(ch => ch.category)))];
 
   const filteredChannels = channels.filter(channel => {
     const matchesSearch = channel.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "Toutes" || channel.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const handleChannelClick = (channel: any) => {
+    setSelectedChannel(channel);
+    setShowPlayer(true);
+  };
+
+  if (showPlayer && selectedChannel) {
+    return (
+      <div className="min-h-screen bg-black">
+        {/* Player Header */}
+        <div className="flex items-center gap-4 p-4 bg-black/50 text-white">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowPlayer(false)}
+            className="text-white hover:bg-white/20"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex items-center gap-3">
+            <img src={selectedChannel.logo} alt={selectedChannel.name} className="w-8 h-8 rounded" />
+            <h1 className="text-lg font-semibold">{selectedChannel.name}</h1>
+          </div>
+        </div>
+
+        {/* Video Player */}
+        <div className="aspect-video">
+          <VideoPlayer
+            src={selectedChannel.url}
+            title={selectedChannel.name}
+            type="hls"
+            className="w-full h-full"
+          />
+        </div>
+
+        {/* Channel Info */}
+        <div className="p-4 text-white">
+          <div className="flex items-center gap-2 mb-2">
+            <TvIcon className="w-4 h-4" />
+            <span className="text-sm text-white/70">{selectedChannel.category}</span>
+            {selectedChannel.isLive && (
+              <span className="px-2 py-1 bg-red-600 text-xs rounded-full">LIVE</span>
+            )}
+          </div>
+          <p className="text-white/80 text-sm">
+            Diffusion en direct de {selectedChannel.name}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -49,6 +102,19 @@ const TV = () => {
       </div>
 
       <div className="px-4 py-6">
+        {loading && (
+          <div className="text-center py-8">
+            <p className="text-white">Chargement des chaînes...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-900/50 text-red-200 p-4 rounded-lg mb-4">
+            <p>Erreur: {error}</p>
+            <p className="text-sm mt-1">Utilisation des chaînes de démonstration.</p>
+          </div>
+        )}
+
         {/* Search and filters */}
         <div className="mb-6 space-y-4">
           <div className="relative">
@@ -89,7 +155,7 @@ const TV = () => {
           
           <ChannelGrid 
             channels={filteredChannels}
-            onChannelClick={(channel) => console.log("Playing channel:", channel.name)}
+            onChannelClick={handleChannelClick}
           />
         </div>
       </div>
