@@ -2,6 +2,7 @@ import { Settings, User, Heart, Clock, Shield, Headphones, MessageCircle, HelpCi
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useNavigate } from "react-router-dom";
 
 const Menu = () => {
   const navigate = useNavigate();
