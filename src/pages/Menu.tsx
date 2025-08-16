@@ -79,6 +79,34 @@ const Menu = () => {
                     key={item.label}
                     variant="card"
                     className="w-full justify-start h-auto p-4 text-left"
+                    onClick={() => {
+                      // Navigation logic based on item label
+                      switch(item.label) {
+                        case "Profil utilisateur":
+                          navigate("/profile");
+                          break;
+                        case "Abonnement":
+                          navigate("/subscription");
+                          break;
+                        case "Appareils connectés":
+                          navigate("/connected-devices");
+                          break;
+                        case "Contrôle parental":
+                          navigate("/parental-control");
+                          break;
+                        case "DVB-T2":
+                          navigate("/dvb-t2");
+                          break;
+                        case "Support client":
+                          navigate("/support");
+                          break;
+                        case "Notifications":
+                          navigate("/notifications");
+                          break;
+                        default:
+                          break;
+                      }
+                    }}
                   >
                     <div className="flex items-center gap-4 w-full">
                       <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center shrink-0">

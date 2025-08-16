@@ -12,6 +12,10 @@ import Menu from "./pages/Menu";
 import DVBT2 from "./pages/DVB-T2";
 import Subscription from "./pages/Subscription";
 import Profile from "./pages/Profile";
+import Support from "./pages/Support";
+import Notifications from "./pages/Notifications";
+import ParentalControl from "./pages/ParentalControl";
+import ConnectedDevices from "./pages/ConnectedDevices";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +36,10 @@ const App = () => (
             <Route path="dvb-t2" element={<DVBT2 />} />
             <Route path="subscription" element={<Subscription />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="support" element={<Support />} />
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="parental-control" element={<ParentalControl />} />
+            <Route path="connected-devices" element={<ConnectedDevices />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
