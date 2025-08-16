@@ -21,7 +21,7 @@ const TV = () => {
     id: channel.id,
     name: channel.name,
     logo: channel.logo,
-    category: channel.group,
+    category: channel.group || "Général",
     isLive: true,
     url: channel.url
   }));

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
+import Hls from "hls.js";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 
@@ -24,10 +25,18 @@ const VideoPlayer = ({ src, title, poster, type = "video", className = "" }: Vid
     const video = videoRef.current;
     if (!video) return;
 
+    let hls: Hls | null = null;
+
     if (type === "hls" && src.includes(".m3u8")) {
-      // For HLS streams, we'll use the native video element
-      // In production, you'd use hls.js here
-      video.src = src;
+      if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = src;
+      } else if (Hls.isSupported()) {
+        hls = new Hls({ enableWorker: true });
+        hls.loadSource(src);
+        hls.attachMedia(video);
+      } else {
+        video.src = src; // Fallback try
+      }
     } else {
       video.src = src;
     }
@@ -41,6 +50,10 @@ const VideoPlayer = ({ src, title, poster, type = "video", className = "" }: Vid
     return () => {
       video.removeEventListener("timeupdate", updateTime);
       video.removeEventListener("loadedmetadata", updateDuration);
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
     };
   }, [src, type]);
 
@@ -109,6 +122,7 @@ const VideoPlayer = ({ src, title, poster, type = "video", className = "" }: Vid
         ref={videoRef}
         poster={poster}
         className="w-full h-full object-cover"
+        crossOrigin="anonymous"
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
       />
