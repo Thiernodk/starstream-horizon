@@ -100,7 +100,7 @@ const Menu = () => {
                         case "Support client":
                           navigate("/support");
                           break;
-                        case "Notifications":
+                        case "Messagerie":
                           navigate("/notifications");
                           break;
                         default:

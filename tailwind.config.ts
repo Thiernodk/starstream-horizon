@@ -108,6 +108,9 @@ export default {
 				'gradient-card': 'var(--gradient-card)',
 				'gradient-overlay': 'var(--gradient-overlay)'
 			},
+			spacing: {
+				'safe-area': 'env(safe-area-inset-bottom)'
+			},
 			boxShadow: {
 				'primary': 'var(--shadow-primary)',
 				'card-hover': 'var(--shadow-card)',

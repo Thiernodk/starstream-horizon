@@ -25,13 +25,13 @@ const ChannelGrid = ({ channels, onChannelClick }: ChannelGridProps) => {
           onClick={() => onChannelClick?.(channel)}
         >
           <div className="relative">
-            <div className="w-16 h-16 bg-gradient-card rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 border border-primary/20">
               <img 
                 src={channel.logo} 
                 alt={channel.name}
-                className="w-12 h-12 object-contain"
+                className="w-12 h-12 object-contain rounded-lg"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = `https://via.placeholder.com/48x48/0EA5E9/FFFFFF?text=${channel.name.charAt(0)}`;
+                  (e.target as HTMLImageElement).src = `https://via.placeholder.com/48x48/0EA5E9/FFFFFF?text=${encodeURIComponent(channel.name.charAt(0))}`;
                 }}
               />
             </div>
