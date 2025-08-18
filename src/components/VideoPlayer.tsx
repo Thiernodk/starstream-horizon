@@ -1,8 +1,10 @@
+
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
 import Hls from "hls.js";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { resolveHlsSource } from "@/utils/stream";
 
 interface VideoPlayerProps {
   src: string;
@@ -26,34 +28,54 @@ const VideoPlayer = ({ src, title, poster, type = "video", className = "" }: Vid
     if (!video) return;
 
     let hls: Hls | null = null;
+    let cancelled = false;
 
-    if (type === "hls" && src.includes(".m3u8")) {
-      if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        video.src = src;
-      } else if (Hls.isSupported()) {
-        hls = new Hls({ enableWorker: true });
-        hls.loadSource(src);
-        hls.attachMedia(video);
-      } else {
-        video.src = src; // Fallback try
+    const setup = async () => {
+      let source = src;
+
+      if (type === "hls") {
+        source = await resolveHlsSource(src);
       }
-    } else {
-      video.src = src;
-    }
 
-    const updateTime = () => setCurrentTime(video.currentTime);
-    const updateDuration = () => setDuration(video.duration);
+      if (cancelled) return;
 
-    video.addEventListener("timeupdate", updateTime);
-    video.addEventListener("loadedmetadata", updateDuration);
+      if (type === "hls") {
+        if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = source;
+        } else if (Hls.isSupported()) {
+          hls = new Hls({ enableWorker: true });
+          hls.loadSource(source);
+          hls.attachMedia(video);
+        } else {
+          // Last resort – let the browser try
+          video.src = source;
+        }
+      } else {
+        video.src = source;
+      }
+
+      const updateTime = () => setCurrentTime(video.currentTime);
+      const updateDuration = () => setDuration(video.duration);
+
+      video.addEventListener("timeupdate", updateTime);
+      video.addEventListener("loadedmetadata", updateDuration);
+
+      return () => {
+        video.removeEventListener("timeupdate", updateTime);
+        video.removeEventListener("loadedmetadata", updateDuration);
+      };
+    };
+
+    const cleanupEvents = setup();
 
     return () => {
-      video.removeEventListener("timeupdate", updateTime);
-      video.removeEventListener("loadedmetadata", updateDuration);
+      cancelled = true;
       if (hls) {
         hls.destroy();
         hls = null;
       }
+      // remove listeners if setup added them
+      cleanupEvents && cleanupEvents.then((dispose) => dispose && dispose());
     };
   }, [src, type]);
 
