@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, Cast, User, Tv as TvIcon } from "lucide-react";
+import { Search, ArrowLeft, Tv as TvIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import VideoPlayer from "@/components/VideoPlayer";
@@ -23,6 +23,7 @@ const TV = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<TabKey>("Toutes les chaînes");
   const [selectedChannel, setSelectedChannel] = useState<ChannelItem | null>(null);
+  const [showPlayer, setShowPlayer] = useState(false);
 
   const { channels: m3uChannels, loading, error } = useM3UParser("https://iptv-org.github.io/iptv/languages/fra.m3u");
 
@@ -69,14 +70,20 @@ const TV = () => {
       <div className="relative h-24 overflow-hidden">
         <img src={channelsBg} alt="Channels background" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-overlay" />
-        <div className="absolute inset-0 flex items-center justify-between px-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-wide">EN DIRECT</h1>
-          <div className="flex items-center gap-2 text-white">
-            <Cast className="w-5 h-5 opacity-90" />
-            <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
-              <User className="w-4 h-4" />
-            </div>
-          </div>
+        <div className="absolute inset-0 flex items-center px-4">
+          {showPlayer && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowPlayer(false)}
+              className="text-white hover:bg-white/20 mr-3"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          )}
+          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-wide">
+            {showPlayer ? selectedChannel?.name : "EN DIRECT"}
+          </h1>
         </div>
       </div>
 
@@ -120,16 +127,19 @@ const TV = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {/* Left column: list of channel thumbnails */}
-          <div className="md:col-span-2 space-y-3 md:max-h-[70vh] md:overflow-y-auto pr-1">
+        {!showPlayer ? (
+          /* Channels list view */
+          <div className="space-y-3 max-h-[70vh] overflow-y-auto">
             {filtered.map((ch) => (
               <div key={ch.id} className="group">
                 <ChannelListItem
                   name={ch.name}
                   logo={ch.logo}
                   active={selectedChannel?.id === ch.id}
-                  onClick={() => setSelectedChannel(ch)}
+                  onClick={() => {
+                    setSelectedChannel(ch);
+                    setShowPlayer(true);
+                  }}
                 />
               </div>
             ))}
@@ -140,45 +150,39 @@ const TV = () => {
               </div>
             )}
           </div>
+        ) : (
+          /* Player view */
+          selectedChannel && (
+            <div className="space-y-4">
+              <div className="aspect-video rounded-lg overflow-hidden bg-black">
+                <VideoPlayer
+                  src={selectedChannel.url}
+                  title={selectedChannel.name}
+                  type="hls"
+                  className="w-full h-full"
+                />
+              </div>
 
-          {/* Right column: details + player */}
-          <div className="md:col-span-3">
-            {selectedChannel ? (
-              <div className="space-y-3">
-                <div className="aspect-video rounded-lg overflow-hidden bg-black">
-                  <VideoPlayer
-                    src={selectedChannel.url}
-                    title={selectedChannel.name}
-                    type="hls"
-                    className="w-full h-full"
-                  />
-                </div>
-
-                <div className="p-3 rounded-lg border bg-card">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TvIcon className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      {selectedChannel.category}
+              <div className="p-4 rounded-lg border bg-card">
+                <div className="flex items-center gap-2 mb-2">
+                  <TvIcon className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {selectedChannel.category}
+                  </span>
+                  {selectedChannel.isLive && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-destructive text-destructive-foreground">
+                      LIVE
                     </span>
-                    {selectedChannel.isLive && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-destructive text-destructive-foreground">
-                        LIVE
-                      </span>
-                    )}
-                  </div>
-                  <h2 className="text-base md:text-lg font-semibold">{selectedChannel.name}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Diffusion en direct — profitez de la chaîne sélectionnée.
-                  </p>
+                  )}
                 </div>
+                <h2 className="text-base md:text-lg font-semibold">{selectedChannel.name}</h2>
+                <p className="text-sm text-muted-foreground">
+                  Diffusion en direct — profitez de la chaîne sélectionnée.
+                </p>
               </div>
-            ) : (
-              <div className="aspect-video rounded-lg bg-muted/30 flex items-center justify-center">
-                <p className="text-muted-foreground text-sm">Sélectionnez une chaîne dans la liste</p>
-              </div>
-            )}
-          </div>
-        </div>
+            </div>
+          )
+        )}
       </div>
     </div>
   );
