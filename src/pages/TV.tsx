@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, ArrowLeft, Tv as TvIcon } from "lucide-react";
+import { Search, Tv as TvIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import VideoPlayer from "@/components/VideoPlayer";
 import { useM3UParser } from "@/hooks/useM3UParser";
 import channelsBg from "@/assets/channels-bg.jpg";
 import ChannelListItem from "@/components/tv/ChannelListItem";
+import TVPlayer from "@/components/tv/TVPlayer";
 
 type ChannelItem = {
   id: string;
@@ -64,6 +63,20 @@ const TV = () => {
     }
   }, [filtered, selectedChannel]);
 
+  // Use TV Player when a channel is selected
+  if (showPlayer && selectedChannel) {
+    return (
+      <TVPlayer
+        channel={selectedChannel}
+        onBack={() => setShowPlayer(false)}
+        channels={filtered}
+        onChannelChange={(channel) => {
+          setSelectedChannel(channel);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen">
       {/* Top header with background and title */}
@@ -71,18 +84,8 @@ const TV = () => {
         <img src={channelsBg} alt="Channels background" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-overlay" />
         <div className="absolute inset-0 flex items-center px-4">
-          {showPlayer && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowPlayer(false)}
-              className="text-white hover:bg-white/20 mr-3"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          )}
           <h1 className="text-2xl md:text-3xl font-bold text-white tracking-wide">
-            {showPlayer ? selectedChannel?.name : "EN DIRECT"}
+            EN DIRECT
           </h1>
         </div>
       </div>
@@ -127,62 +130,28 @@ const TV = () => {
           </div>
         )}
 
-        {!showPlayer ? (
-          /* Channels list view */
-          <div className="space-y-3 max-h-[70vh] overflow-y-auto">
-            {filtered.map((ch) => (
-              <div key={ch.id} className="group">
-                <ChannelListItem
-                  name={ch.name}
-                  logo={ch.logo}
-                  active={selectedChannel?.id === ch.id}
-                  onClick={() => {
-                    setSelectedChannel(ch);
-                    setShowPlayer(true);
-                  }}
-                />
-              </div>
-            ))}
-
-            {filtered.length === 0 && (
-              <div className="text-sm text-muted-foreground py-8 text-center">
-                Aucune chaîne à afficher.
-              </div>
-            )}
-          </div>
-        ) : (
-          /* Player view */
-          selectedChannel && (
-            <div className="space-y-4">
-              <div className="aspect-video rounded-lg overflow-hidden bg-black">
-                <VideoPlayer
-                  src={selectedChannel.url}
-                  title={selectedChannel.name}
-                  type="hls"
-                  className="w-full h-full"
-                />
-              </div>
-
-              <div className="p-4 rounded-lg border bg-card">
-                <div className="flex items-center gap-2 mb-2">
-                  <TvIcon className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
-                    {selectedChannel.category}
-                  </span>
-                  {selectedChannel.isLive && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-destructive text-destructive-foreground">
-                      LIVE
-                    </span>
-                  )}
-                </div>
-                <h2 className="text-base md:text-lg font-semibold">{selectedChannel.name}</h2>
-                <p className="text-sm text-muted-foreground">
-                  Diffusion en direct — profitez de la chaîne sélectionnée.
-                </p>
-              </div>
+        {/* Channels list view */}
+        <div className="space-y-3 max-h-[70vh] overflow-y-auto">
+          {filtered.map((ch) => (
+            <div key={ch.id} className="group">
+              <ChannelListItem
+                name={ch.name}
+                logo={ch.logo}
+                active={selectedChannel?.id === ch.id}
+                onClick={() => {
+                  setSelectedChannel(ch);
+                  setShowPlayer(true);
+                }}
+              />
             </div>
-          )
-        )}
+          ))}
+
+          {filtered.length === 0 && (
+            <div className="text-sm text-muted-foreground py-8 text-center">
+              Aucune chaîne à afficher.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
