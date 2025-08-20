@@ -93,14 +93,6 @@ const TVPlayerOverlay = ({
         </div>
       </div>
 
-      {/* Channel name overlay (always visible but fades) */}
-      <div className={`absolute top-6 right-6 transition-opacity duration-1000 ${
-        showControls ? "opacity-100" : "opacity-30"
-      }`}>
-        <div className="bg-black/70 text-white px-3 py-1 rounded-lg border border-primary/30">
-          <span className="text-sm font-medium">{channel.name}</span>
-        </div>
-      </div>
     </>
   );
 };

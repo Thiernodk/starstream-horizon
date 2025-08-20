@@ -90,51 +90,6 @@ const TV = () => {
             }}
           />
           
-          {/* Content info section below player in portrait mode */}
-          <div className="bg-card rounded-lg p-4 space-y-4">
-            <div className="flex items-start gap-3">
-              <img 
-                src={selectedChannel.logo} 
-                alt={selectedChannel.name}
-                className="w-12 h-12 rounded-lg object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "/placeholder.svg";
-                }}
-              />
-              <div className="flex-1 space-y-2">
-                <h2 className="text-lg font-semibold">Programme en cours</h2>
-                <p className="text-muted-foreground text-sm">
-                  Description du programme actuellement diffusé sur cette chaîne
-                </p>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>20:00 - 22:00</span>
-                  <span className="px-2 py-1 bg-destructive rounded-full text-destructive-foreground text-xs">
-                    LIVE
-                  </span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-1">
-                  <div className="bg-primary h-1 rounded-full w-[45%]" />
-                </div>
-              </div>
-            </div>
-            
-            {/* Action buttons */}
-            <div className="flex items-center gap-2 pt-2">
-              <Button variant="outline" size="sm">
-                <Clock className="w-4 h-4 mr-2" />
-                Programme TV
-              </Button>
-              <Button variant="outline" size="sm">
-                <Video className="w-4 h-4 mr-2" />
-                Qualité
-              </Button>
-              <Button variant="outline" size="sm">
-                <Subtitles className="w-4 h-4 mr-2" />
-                Sous-titres
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
     );

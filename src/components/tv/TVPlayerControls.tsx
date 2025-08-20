@@ -1,5 +1,4 @@
 import { 
-  ArrowLeft, 
   Play, 
   Pause, 
   Volume2, 
@@ -35,7 +34,6 @@ interface TVPlayerControlsProps {
   onToggleFullscreen: () => void;
   onSeek: (seconds: number) => void;
   onRestart: () => void;
-  onBack: () => void;
   onShowSettings: () => void;
   onShowZap: () => void;
   onShowEPG: () => void;
@@ -55,7 +53,6 @@ const TVPlayerControls = ({
   onToggleFullscreen,
   onSeek,
   onRestart,
-  onBack,
   onShowSettings,
   onShowZap,
   onShowEPG,
@@ -99,14 +96,6 @@ const TVPlayerControls = ({
         <div className="flex items-center justify-between">
           {/* Left Controls */}
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onBack}
-              className="text-white hover:bg-white/20"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
 
             <Button
               variant="ghost"

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Settings, Zap, Cast, Clock, Volume2, VolumeX, Maximize, Minimize, Pause, Play, RotateCcw, RotateCw, Square, Mic, Subtitles, Video, List } from "lucide-react";
+import { Settings, Zap, Cast, Clock, Volume2, VolumeX, Maximize, Minimize, Pause, Play, RotateCcw, RotateCw, Square, Mic, Subtitles, Video, List, PictureInPicture2 } from "lucide-react";
 import Hls from "hls.js";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -46,6 +46,7 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
   const [audioTrack, setAudioTrack] = useState(0);
   const [subtitles, setSubtitles] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isPiP, setIsPiP] = useState(false);
 
   let controlsTimeout = useRef<NodeJS.Timeout>();
 
@@ -213,6 +214,23 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
     }
   };
 
+  const togglePiP = async () => {
+    const video = videoRef.current as any;
+    if (!video) return;
+    try {
+      // @ts-ignore
+      if (!document.pictureInPictureElement) {
+        await video.requestPictureInPicture?.();
+        setIsPiP(true);
+      } else {
+        await (document as any).exitPictureInPicture?.();
+        setIsPiP(false);
+      }
+    } catch (e) {
+      console.warn("PiP error:", e);
+    }
+  };
+
   const handleSeek = (seconds: number) => {
     const video = videoRef.current;
     if (!video) return;
@@ -241,109 +259,202 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
   };
 
   return (
-    <div 
-      className={`relative w-full bg-black overflow-hidden transition-all duration-300 ${
-        isFullscreen ? 'h-screen' : 'h-[60vh] max-w-md mx-auto mt-4 rounded-lg'
-      }`}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => setShowControls(false)}
-    >
-      {/* Video Element */}
-      <video
-        ref={videoRef}
-        className="w-full h-full object-cover"
-        crossOrigin="anonymous"
-        muted={isMuted}
-      />
+    <>
+      <div 
+        className={`relative w-full bg-black overflow-hidden transition-all duration-300 ${
+          isFullscreen ? 'h-screen' : 'h-[60vh] max-w-md mx-auto mt-4 rounded-lg'
+        }`}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setShowControls(false)}
+      >
+        {/* Video Element */}
+        <video
+          ref={videoRef}
+          className="w-full h-full object-cover"
+          crossOrigin="anonymous"
+          muted={isMuted}
+        />
 
-      {/* Loading Overlay */}
-      {isLoading && (
-        <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
-          <div className="text-center text-white">
-            <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p>Chargement de {channel.name}...</p>
+        {/* Loading Overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+            <div className="text-center text-white">
+              <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p>Chargement de {channel.name}...</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Error Overlay */}
-      {error && (
-        <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
-          <div className="text-center text-white">
-            <p className="text-destructive mb-4">{error}</p>
-            <Button onClick={onBack} variant="outline">
-              Retour aux chaînes
+        {/* Error Overlay */}
+        {error && (
+          <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+            <div className="text-center text-white">
+              <p className="text-destructive mb-4">{error}</p>
+              <Button onClick={onBack} variant="outline">
+                Retour aux chaînes
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* TV Player Overlay - Fullscreen only */}
+        {isFullscreen && (
+          <TVPlayerOverlay
+            channel={channel}
+            currentProgram={currentProgram}
+            currentTime={getCurrentTime()}
+            showControls={showControls}
+          />
+        )}
+
+        {/* Controls - Fullscreen overlay */}
+        {isFullscreen && (
+          <TVPlayerControls
+            isPlaying={isPlaying}
+            isMuted={isMuted}
+            volume={volume}
+            currentTime={currentTime}
+            duration={duration}
+            showControls={showControls}
+            isFullscreen={isFullscreen}
+            onTogglePlay={togglePlay}
+            onToggleMute={toggleMute}
+            onVolumeChange={handleVolumeChange}
+            onToggleFullscreen={toggleFullscreen}
+            onSeek={handleSeek}
+            onRestart={restartProgram}
+            onShowSettings={() => setShowSettings(true)}
+            onShowZap={() => setShowZapList(true)}
+            onShowEPG={() => setShowEPG(true)}
+            quality={quality}
+            audioTrack={audioTrack}
+            subtitles={subtitles}
+          />
+        )}
+
+        {/* Settings Panel */}
+        {showSettings && (
+          <TVPlayerSettings
+            onClose={() => setShowSettings(false)}
+            quality={quality}
+            onQualityChange={setQuality}
+            audioTrack={audioTrack}
+            onAudioTrackChange={setAudioTrack}
+            subtitles={subtitles}
+            onSubtitlesChange={setSubtitles}
+          />
+        )}
+
+        {/* Zap List */}
+        {showZapList && (
+          <TVZapList
+            channels={channels}
+            currentChannel={channel}
+            onChannelSelect={(ch) => {
+              onChannelChange(ch);
+              setShowZapList(false);
+            }}
+            onClose={() => setShowZapList(false)}
+          />
+        )}
+
+        {/* EPG Overlay */}
+        {showEPG && (
+          <TVEPGOverlay
+            channel={channel}
+            onClose={() => setShowEPG(false)}
+          />
+        )}
+      </div>
+
+      {/* Bottom info + controls (portrait mode) */}
+      {!isFullscreen && (
+        <div className="max-w-md mx-auto px-4 py-3 space-y-3">
+          {/* Info */}
+          <div className="flex items-start gap-3">
+            <img
+              src={channel.logo}
+              alt={channel.name}
+              className="w-10 h-10 rounded-md object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "/placeholder.svg";
+              }}
+            />
+            <div className="flex-1">
+              <div className="text-base font-semibold">{currentProgram.title}</div>
+              <div className="text-sm text-muted-foreground">{currentProgram.description}</div>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                <span>{currentProgram.startTime} - {currentProgram.endTime}</span>
+                <span className="px-2 py-0.5 bg-destructive rounded-full text-destructive-foreground">LIVE</span>
+              </div>
+              <div className="mt-2 h-1 w-full bg-muted rounded-full">
+                <div className="h-1 bg-primary rounded-full" style={{ width: `${currentProgram.progress}%` }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Main controls */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <Button variant="ghost" size="icon" onClick={() => handleSeek(-10)} aria-label="-10s">
+                <RotateCcw className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={togglePlay} aria-label="Lecture/Pause">
+                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => handleSeek(10)} aria-label="+10s">
+                <RotateCw className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={restartProgram} aria-label="Recommencer">
+                <Square className="w-5 h-5" />
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={toggleMute} aria-label="Muet">
+                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              </Button>
+              <div className="w-24">
+                <Slider value={volume} onValueChange={handleVolumeChange} max={1} step={0.1} />
+              </div>
+            </div>
+          </div>
+
+          {/* Secondary actions */}
+          <div className="flex items-center flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowEPG(true)}>
+              <Clock className="w-4 h-4 mr-2" />
+              Programme TV
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowZapList(true)}>
+              <List className="w-4 h-4 mr-2" />
+              Zap
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
+              <Video className="w-4 h-4 mr-2" />
+              Qualité
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
+              <Mic className="w-4 h-4 mr-2" />
+              Audio
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
+              <Subtitles className="w-4 h-4 mr-2" />
+              Sous-titres
+            </Button>
+            <Button variant="outline" size="sm" onClick={togglePiP}>
+              <PictureInPicture className="w-4 h-4 mr-2" />
+              PiP
+            </Button>
+            <Button variant="outline" size="sm" onClick={toggleFullscreen}>
+              <Maximize className="w-4 h-4 mr-2" />
+              Plein écran
             </Button>
           </div>
         </div>
       )}
-
-      {/* TV Player Overlay - Info display */}
-      <TVPlayerOverlay
-        channel={channel}
-        currentProgram={currentProgram}
-        currentTime={getCurrentTime()}
-        showControls={showControls}
-      />
-
-      {/* Controls */}
-      <TVPlayerControls
-        isPlaying={isPlaying}
-        isMuted={isMuted}
-        volume={volume}
-        currentTime={currentTime}
-        duration={duration}
-        showControls={showControls}
-        isFullscreen={isFullscreen}
-        onTogglePlay={togglePlay}
-        onToggleMute={toggleMute}
-        onVolumeChange={handleVolumeChange}
-        onToggleFullscreen={toggleFullscreen}
-        onSeek={handleSeek}
-        onRestart={restartProgram}
-        onBack={onBack}
-        onShowSettings={() => setShowSettings(true)}
-        onShowZap={() => setShowZapList(true)}
-        onShowEPG={() => setShowEPG(true)}
-        quality={quality}
-        audioTrack={audioTrack}
-        subtitles={subtitles}
-      />
-
-      {/* Settings Panel */}
-      {showSettings && (
-        <TVPlayerSettings
-          onClose={() => setShowSettings(false)}
-          quality={quality}
-          onQualityChange={setQuality}
-          audioTrack={audioTrack}
-          onAudioTrackChange={setAudioTrack}
-          subtitles={subtitles}
-          onSubtitlesChange={setSubtitles}
-        />
-      )}
-
-      {/* Zap List */}
-      {showZapList && (
-        <TVZapList
-          channels={channels}
-          currentChannel={channel}
-          onChannelSelect={(ch) => {
-            onChannelChange(ch);
-            setShowZapList(false);
-          }}
-          onClose={() => setShowZapList(false)}
-        />
-      )}
-
-      {/* EPG Overlay */}
-      {showEPG && (
-        <TVEPGOverlay
-          channel={channel}
-          onClose={() => setShowEPG(false)}
-        />
-      )}
-    </div>
+    </>
   );
 };
 
