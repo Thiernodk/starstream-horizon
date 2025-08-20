@@ -78,7 +78,7 @@ const TV = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       {/* Top header with background and title */}
       <div className="relative h-24 overflow-hidden">
         <img src={channelsBg} alt="Channels background" className="w-full h-full object-cover" />
@@ -90,9 +90,9 @@ const TV = () => {
         </div>
       </div>
 
-      <div className="px-4 py-4 space-y-4">
+      <div className="px-4 py-6 space-y-6">
         {/* Tabs like in the screenshot */}
-        <div className="flex gap-4 overflow-x-auto pb-1">
+        <div className="flex gap-6 overflow-x-auto pb-1">
           {TABS.map(tab => (
             <button
               key={tab}
@@ -120,7 +120,7 @@ const TV = () => {
         {/* Content */}
         {loading && (
           <div className="text-center py-8">
-            <p className="text-white">Chargement des chaînes...</p>
+            <p className="text-foreground">Chargement des chaînes...</p>
           </div>
         )}
 
@@ -130,25 +130,53 @@ const TV = () => {
           </div>
         )}
 
-        {/* Channels list view */}
-        <div className="space-y-3 max-h-[70vh] overflow-y-auto">
+        {/* Section title */}
+        <div className="pt-4">
+          <h2 className="text-foreground text-xl font-medium mb-6">
+            {activeTab}
+          </h2>
+        </div>
+
+        {/* Channels grid view - like the image */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filtered.map((ch) => (
-            <div key={ch.id} className="group">
-              <ChannelListItem
-                name={ch.name}
-                logo={ch.logo}
-                active={selectedChannel?.id === ch.id}
-                onClick={() => {
-                  setSelectedChannel(ch);
-                  setShowPlayer(true);
-                }}
-              />
+            <div 
+              key={ch.id}
+              className="group cursor-pointer"
+              onClick={() => {
+                setSelectedChannel(ch);
+                setShowPlayer(true);
+              }}
+            >
+              <div className="aspect-square bg-card border border-border rounded-lg p-4 hover:bg-accent transition-colors duration-200 flex items-center justify-center">
+                <div className="w-full h-full flex items-center justify-center">
+                  <img
+                    src={ch.logo}
+                    alt={ch.name}
+                    className="max-w-full max-h-full object-contain filter brightness-90 group-hover:brightness-100 transition-all duration-200"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://via.placeholder.com/120x80/1f2937/ffffff?text=${encodeURIComponent(
+                        ch.name.slice(0, 3).toUpperCase()
+                      )}`;
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="mt-2 text-center">
+                <p className="text-sm text-foreground font-medium truncate">
+                  {ch.name}
+                </p>
+              </div>
             </div>
           ))}
 
           {filtered.length === 0 && (
-            <div className="text-sm text-muted-foreground py-8 text-center">
-              Aucune chaîne à afficher.
+            <div className="col-span-full text-center py-12">
+              <div className="text-muted-foreground">
+                <TvIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium mb-2">Aucune chaîne trouvée</p>
+                <p className="text-sm">Essayez de modifier votre recherche ou de changer de catégorie</p>
+              </div>
             </div>
           )}
         </div>
