@@ -248,44 +248,6 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setShowControls(false)}
     >
-      {/* Back button - only visible when not fullscreen */}
-      {!isFullscreen && (
-        <div className="absolute top-4 left-4 z-50">
-          <Button
-            onClick={onBack}
-            variant="outline"
-            size="icon"
-            className="bg-black/50 border-white/20 text-white hover:bg-black/70"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-        </div>
-      )}
-      
-      {/* Portrait mode channel info - only visible when not fullscreen */}
-      {!isFullscreen && (
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 z-40">
-          <div className="text-center text-white space-y-3">
-            <h1 className="text-2xl font-bold">{channel.name}</h1>
-            <div className="text-lg">{currentProgram.title}</div>
-            <div className="text-sm text-white/70 max-w-sm mx-auto">
-              {currentProgram.description}
-            </div>
-            <div className="flex items-center justify-center gap-4 text-sm text-white/60">
-              <span>{currentProgram.startTime} - {currentProgram.endTime}</span>
-              <span className="px-2 py-1 bg-destructive rounded-full text-destructive-foreground text-xs">
-                LIVE
-              </span>
-            </div>
-            <div className="w-full max-w-xs mx-auto bg-white/20 rounded-full h-1 mt-2">
-              <div 
-                className="bg-primary h-1 rounded-full transition-all duration-300"
-                style={{ width: `${currentProgram.progress}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
       {/* Video Element */}
       <video
         ref={videoRef}
