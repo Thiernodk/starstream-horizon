@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useM3UParser } from "@/hooks/useM3UParser";
 import channelsBg from "@/assets/channels-bg.jpg";
 import ChannelListItem from "@/components/tv/ChannelListItem";
-import TVPlayer from "@/components/tv/TVPlayer";
+import UnifiedVideoPlayer from "@/components/UnifiedVideoPlayer";
 
 type ChannelItem = {
   id: string;
@@ -64,34 +64,20 @@ const TV = () => {
     }
   }, [filtered, selectedChannel]);
 
-  // Use TV Player when a channel is selected
+  // Use Unified Video Player when a channel is selected
   if (showPlayer && selectedChannel) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="px-4 py-6 space-y-4">
-          {/* Back button and channel name outside the player */}
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={() => setShowPlayer(false)}
-              variant="outline"
-              size="icon"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <h1 className="text-xl font-semibold">{selectedChannel.name}</h1>
-          </div>
-          
-          <TVPlayer
-            channel={selectedChannel}
-            onBack={() => setShowPlayer(false)}
-            channels={filtered}
-            onChannelChange={(channel) => {
-              setSelectedChannel(channel);
-            }}
-          />
-          
-        </div>
-      </div>
+      <UnifiedVideoPlayer
+        src={selectedChannel.url}
+        title={selectedChannel.name}
+        description={`Regardez ${selectedChannel.name} en direct. Chaîne de la catégorie ${selectedChannel.category}.`}
+        type="hls"
+        onBack={() => setShowPlayer(false)}
+        metadata={{
+          genre: selectedChannel.category,
+          duration: "EN DIRECT",
+        }}
+      />
     );
   }
 
