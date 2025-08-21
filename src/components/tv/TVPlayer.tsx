@@ -444,7 +444,7 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
               Sous-titres
             </Button>
             <Button variant="outline" size="sm" onClick={togglePiP}>
-              <PictureInPicture className="w-4 h-4 mr-2" />
+              <PictureInPicture2 className="w-4 h-4 mr-2" />
               PiP
             </Button>
             <Button variant="outline" size="sm" onClick={toggleFullscreen}>
