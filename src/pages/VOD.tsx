@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import VideoPlayer from "@/components/VideoPlayer";
+import UnifiedVideoPlayer from "@/components/UnifiedVideoPlayer";
 
 const VOD = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -102,49 +102,20 @@ const VOD = () => {
 
   if (showPlayer && selectedContent) {
     return (
-      <div className="min-h-screen bg-black">
-        {/* Player Header */}
-        <div className="flex items-center gap-4 p-4 bg-black/50 text-white">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowPlayer(false)}
-            className="text-white hover:bg-white/20"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-lg font-semibold">{selectedContent.title}</h1>
-            <p className="text-sm text-white/70">{selectedContent.genre} • {selectedContent.year}</p>
-          </div>
-        </div>
-
-        {/* Video Player */}
-        <div className="aspect-video">
-          <VideoPlayer
-            src={selectedContent.videoUrl}
-            title={selectedContent.title}
-            poster={selectedContent.thumbnail}
-            className="w-full h-full"
-          />
-        </div>
-
-        {/* Content Info */}
-        <div className="p-4 text-white">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm">{selectedContent.rating}</span>
-            </div>
-            <span className="text-sm text-white/70">•</span>
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              <span className="text-sm text-white/70">{selectedContent.duration}</span>
-            </div>
-          </div>
-          <p className="text-white/80">{selectedContent.description}</p>
-        </div>
-      </div>
+      <UnifiedVideoPlayer
+        src={selectedContent.videoUrl}
+        title={selectedContent.title}
+        description={selectedContent.description}
+        poster={selectedContent.thumbnail}
+        type="video"
+        onBack={() => setShowPlayer(false)}
+        metadata={{
+          genre: selectedContent.genre,
+          year: selectedContent.year,
+          duration: selectedContent.duration,
+          rating: selectedContent.rating
+        }}
+      />
     );
   }
 

@@ -4,11 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import ChannelGrid from "@/components/ChannelGrid";
+import DVBVideoPlayer from "@/components/DVBVideoPlayer";
 
 const DVBT2 = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Toutes");
+  const [selectedChannel, setSelectedChannel] = useState<any>(null);
+  const [showPlayer, setShowPlayer] = useState(false);
 
   // Sample DVB-T2 channels
   const channels = [
@@ -31,6 +33,20 @@ const DVBT2 = () => {
   });
 
   const averageSignal = Math.round(channels.reduce((acc, ch) => acc + ch.signal, 0) / channels.length);
+
+  const handleChannelClick = (channel: any) => {
+    setSelectedChannel(channel);
+    setShowPlayer(true);
+  };
+
+  if (showPlayer && selectedChannel) {
+    return (
+      <DVBVideoPlayer
+        channel={selectedChannel}
+        onBack={() => setShowPlayer(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -120,7 +136,11 @@ const DVBT2 = () => {
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {filteredChannels.map((channel) => (
-              <Card key={channel.id} className="relative p-4 hover:shadow-card-hover transition-all duration-300 cursor-pointer group">
+              <Card 
+                key={channel.id} 
+                className="relative p-4 hover:shadow-card-hover transition-all duration-300 cursor-pointer group"
+                onClick={() => handleChannelClick(channel)}
+              >
                 <div className="flex flex-col items-center text-center">
                   <div className="w-16 h-16 bg-gradient-card rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
                     <img 
