@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface Channel {
   id: string;
@@ -6,15 +6,46 @@ interface Channel {
   logo: string;
   url: string;
   group: string;
+  source?: string;
 }
 
-export const useM3UParser = (m3uUrl: string) => {
+interface CustomSource {
+  id: string;
+  name: string;
+  url: string;
+  type: 'M3U' | 'Manual';
+}
+
+interface CustomChannel extends Channel {
+  sourceId: string;
+}
+
+const STORAGE_KEYS = {
+  CUSTOM_SOURCES: 'tv-custom-sources',
+  CUSTOM_CHANNELS: 'tv-custom-channels'
+};
+
+export const useM3UParser = (defaultM3uUrl: string) => {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [customSources, setCustomSources] = useState<CustomSource[]>([]);
+  const [customChannels, setCustomChannels] = useState<CustomChannel[]>([]);
 
+  // Load custom sources and channels from localStorage
   useEffect(() => {
-    const parseM3U = async () => {
+    const savedSources = localStorage.getItem(STORAGE_KEYS.CUSTOM_SOURCES);
+    const savedChannels = localStorage.getItem(STORAGE_KEYS.CUSTOM_CHANNELS);
+    
+    if (savedSources) {
+      setCustomSources(JSON.parse(savedSources));
+    }
+    if (savedChannels) {
+      setCustomChannels(JSON.parse(savedChannels));
+    }
+  }, []);
+
+  const parseM3U = useCallback(async (url: string, sourceName = 'Default') => {
       try {
         setLoading(true);
         setError(null);
@@ -38,7 +69,7 @@ export const useM3UParser = (m3uUrl: string) => {
           return data.contents as string;
         };
 
-        const m3uContent = await tryFetchText(m3uUrl);
+        const m3uContent = await tryFetchText(url);
 
         const lines = m3uContent.split('\n');
         const parsedChannels: Channel[] = [];
@@ -54,10 +85,11 @@ export const useM3UParser = (m3uUrl: string) => {
             const groupMatch = line.match(/group-title="([^"]+)"/);
 
             currentChannel = {
-              id: `channel-${parsedChannels.length + 1}`,
+              id: `${sourceName}-${parsedChannels.length + 1}`,
               name: nameMatch ? nameMatch[1].trim() : `Chaîne ${parsedChannels.length + 1}`,
               logo: logoMatch ? logoMatch[1] : `https://via.placeholder.com/48x48/0EA5E9/FFFFFF?text=${encodeURIComponent(nameMatch ? nameMatch[1].charAt(0) : 'TV')}`,
               group: groupMatch ? groupMatch[1] || 'Général' : 'Général',
+              source: sourceName,
             };
           } else if (line && !line.startsWith('#') && (currentChannel as any).name) {
             // This is the stream URL
@@ -67,49 +99,132 @@ export const useM3UParser = (m3uUrl: string) => {
           }
         }
 
-        setChannels(parsedChannels);
+        return parsedChannels;
       } catch (err) {
         console.error('Error parsing M3U:', err);
-        setError(err instanceof Error ? err.message : 'Failed to parse M3U playlist');
-        
-        // Fallback to demo channels
-        setChannels([
-          {
-            id: "1",
-            name: "France 24 (FR)",
-            logo: "https://upload.wikimedia.org/wikipedia/commons/6/65/France_24_logo_2013.svg",
-            url: "https://static.france24.com/live/F24_FR_HI_HLS/live_tv.m3u8",
-            group: "Infos"
-          },
-          {
-            id: "2",
-            name: "Euronews (World)",
-            logo: "https://upload.wikimedia.org/wikipedia/commons/7/75/Euronews_2016_Logo.svg",
-            url: "https://euronews-euronews-world-1-eu.rakuten.wurl.tv/playlist.m3u8",
-            group: "Infos"
-          },
-          {
-            id: "3",
-            name: "Démo Mux",
-            logo: "https://via.placeholder.com/48x48/9333EA/FFFFFF?text=DM",
-            url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
-            group: "Démo"
-          },
-          {
-            id: "4",
-            name: "Démo Sintel",
-            logo: "https://via.placeholder.com/48x48/059669/FFFFFF?text=DS",
-            url: "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8",
-            group: "Démo"
-          }
-        ]);
-      } finally {
-        setLoading(false);
+        throw err;
       }
-    };
+    }, []);
 
-    parseM3U();
-  }, [m3uUrl]);
+  const loadAllChannels = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  return { channels, loading, error };
+      // Parse default M3U
+      const defaultChannels = await parseM3U(defaultM3uUrl, 'Default');
+      
+      // Parse custom M3U sources
+      const customM3UChannels: Channel[] = [];
+      for (const source of customSources.filter(s => s.type === 'M3U')) {
+        try {
+          const sourceChannels = await parseM3U(source.url, source.name);
+          customM3UChannels.push(...sourceChannels);
+        } catch (err) {
+          console.warn(`Failed to load source ${source.name}:`, err);
+        }
+      }
+
+      // Combine with manual channels
+      const manualChannels: Channel[] = customChannels.map(ch => ({
+        id: ch.id,
+        name: ch.name,
+        logo: ch.logo,
+        url: ch.url,
+        group: ch.group,
+        source: customSources.find(s => s.id === ch.sourceId)?.name || 'Manual'
+      }));
+
+      const allChannels = [...defaultChannels, ...customM3UChannels, ...manualChannels];
+      setChannels(allChannels);
+
+    } catch (err) {
+      console.error('Error loading channels:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load channels');
+      
+      // Fallback to demo channels
+      setChannels([
+        {
+          id: "1",
+          name: "France 24 (FR)",
+          logo: "https://upload.wikimedia.org/wikipedia/commons/6/65/France_24_logo_2013.svg",
+          url: "https://static.france24.com/live/F24_FR_HI_HLS/live_tv.m3u8",
+          group: "Infos",
+          source: "Demo"
+        },
+        {
+          id: "2",
+          name: "Euronews (World)",
+          logo: "https://upload.wikimedia.org/wikipedia/commons/7/75/Euronews_2016_Logo.svg",
+          url: "https://euronews-euronews-world-1-eu.rakuten.wurl.tv/playlist.m3u8",
+          group: "Infos",
+          source: "Demo"
+        },
+        {
+          id: "3",
+          name: "Démo Mux",
+          logo: "https://via.placeholder.com/48x48/9333EA/FFFFFF?text=DM",
+          url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+          group: "Démo",
+          source: "Demo"
+        },
+        {
+          id: "4",
+          name: "Démo Sintel",
+          logo: "https://via.placeholder.com/48x48/059669/FFFFFF?text=DS",
+          url: "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8",
+          group: "Démo",
+          source: "Demo"
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }, [defaultM3uUrl, customSources, customChannels, parseM3U]);
+
+  useEffect(() => {
+    loadAllChannels();
+  }, [loadAllChannels]);
+
+  const addCustomSource = useCallback((source: Omit<CustomSource, 'id'>) => {
+    const newSource = { ...source, id: Date.now().toString() };
+    const updatedSources = [...customSources, newSource];
+    setCustomSources(updatedSources);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_SOURCES, JSON.stringify(updatedSources));
+  }, [customSources]);
+
+  const removeCustomSource = useCallback((sourceId: string) => {
+    const updatedSources = customSources.filter(s => s.id !== sourceId);
+    const updatedChannels = customChannels.filter(ch => ch.sourceId !== sourceId);
+    
+    setCustomSources(updatedSources);
+    setCustomChannels(updatedChannels);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_SOURCES, JSON.stringify(updatedSources));
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_CHANNELS, JSON.stringify(updatedChannels));
+  }, [customSources, customChannels]);
+
+  const addCustomChannel = useCallback((channel: Omit<CustomChannel, 'id'>) => {
+    const newChannel = { ...channel, id: Date.now().toString() };
+    const updatedChannels = [...customChannels, newChannel];
+    setCustomChannels(updatedChannels);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_CHANNELS, JSON.stringify(updatedChannels));
+  }, [customChannels]);
+
+  const removeCustomChannel = useCallback((channelId: string) => {
+    const updatedChannels = customChannels.filter(ch => ch.id !== channelId);
+    setCustomChannels(updatedChannels);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_CHANNELS, JSON.stringify(updatedChannels));
+  }, [customChannels]);
+
+  return { 
+    channels, 
+    loading, 
+    error,
+    customSources,
+    addCustomSource,
+    removeCustomSource,
+    addCustomChannel,
+    removeCustomChannel,
+    refresh: loadAllChannels
+  };
 };

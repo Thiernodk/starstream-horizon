@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, Tv as TvIcon, ArrowLeft, Clock, Video, Subtitles } from "lucide-react";
+import { Search, Tv as TvIcon, Settings, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useM3UParser } from "@/hooks/useM3UParser";
 import channelsBg from "@/assets/channels-bg.jpg";
 import ChannelListItem from "@/components/tv/ChannelListItem";
 import UnifiedVideoPlayer from "@/components/UnifiedVideoPlayer";
+import { SourcesDialog } from "@/components/tv/SourcesDialog";
+import { toast } from "@/hooks/use-toast";
 
 type ChannelItem = {
   id: string;
@@ -14,6 +17,7 @@ type ChannelItem = {
   category: string;
   isLive: boolean;
   url: string;
+  source?: string;
 };
 
 const TABS = ["Favoris", "Toutes les chaînes", "Sport", "Cinéma"] as const;
@@ -24,8 +28,19 @@ const TV = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("Toutes les chaînes");
   const [selectedChannel, setSelectedChannel] = useState<ChannelItem | null>(null);
   const [showPlayer, setShowPlayer] = useState(false);
+  const [selectedSource, setSelectedSource] = useState<string>("all");
+  const [showSourcesDialog, setShowSourcesDialog] = useState(false);
 
-  const { channels: m3uChannels, loading, error } = useM3UParser("https://iptv-org.github.io/iptv/languages/fra.m3u");
+  const { 
+    channels: m3uChannels, 
+    loading, 
+    error, 
+    customSources,
+    addCustomSource,
+    removeCustomSource,
+    addCustomChannel,
+    refresh
+  } = useM3UParser("https://iptv-org.github.io/iptv/languages/fra.m3u");
 
   const channels: ChannelItem[] = useMemo(() => {
     return m3uChannels.map(ch => ({
@@ -34,12 +49,24 @@ const TV = () => {
       logo: ch.logo,
       category: ch.group || "Général",
       isLive: true,
-      url: ch.url
+      url: ch.url,
+      source: ch.source || "Default"
     }));
   }, [m3uChannels]);
 
+  // Get unique sources for filter
+  const availableSources = useMemo(() => {
+    const sources = new Set(channels.map(ch => ch.source).filter(Boolean));
+    return ['all', ...Array.from(sources)];
+  }, [channels]);
+
   const filtered = useMemo(() => {
     let list = channels;
+
+    // Filter by source
+    if (selectedSource !== "all") {
+      list = list.filter(c => c.source === selectedSource);
+    }
 
     if (activeTab === "Sport") {
       list = list.filter(c => /sport/i.test(c.category));
@@ -56,7 +83,36 @@ const TV = () => {
     }
 
     return list;
-  }, [channels, activeTab, searchQuery]);
+  }, [channels, activeTab, searchQuery, selectedSource]);
+
+  const handleAddSource = (source: { name: string; url: string; type: 'M3U' }) => {
+    addCustomSource(source);
+    toast({
+      title: "Source ajoutée",
+      description: `La source "${source.name}" a été ajoutée avec succès.`,
+    });
+    // Refresh channels after adding new source
+    setTimeout(() => refresh(), 500);
+  };
+
+  const handleRemoveSource = (sourceId: string) => {
+    const source = customSources.find(s => s.id === sourceId);
+    removeCustomSource(sourceId);
+    toast({
+      title: "Source supprimée",
+      description: `La source "${source?.name}" a été supprimée.`,
+    });
+  };
+
+  const handleAddChannel = (channel: { name: string; url: string; logo: string; group: string; sourceId: string }) => {
+    addCustomChannel(channel);
+    toast({
+      title: "Chaîne ajoutée",
+      description: `La chaîne "${channel.name}" a été ajoutée avec succès.`,
+    });
+    // Refresh channels after adding new channel
+    setTimeout(() => refresh(), 500);
+  };
 
   useEffect(() => {
     if (!selectedChannel && filtered.length > 0) {
@@ -110,15 +166,44 @@ const TV = () => {
           ))}
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-xl">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            placeholder="Rechercher une chaîne..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        {/* Controls row */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* Search */}
+          <div className="relative flex-1 max-w-xl">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Rechercher une chaîne..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Source filter */}
+          <div className="flex gap-2">
+            <Select value={selectedSource} onValueChange={setSelectedSource}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Toutes les sources" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les sources</SelectItem>
+                {availableSources.filter(s => s !== 'all').map(source => (
+                  <SelectItem key={source} value={source}>
+                    {source}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="outline"
+              onClick={() => setShowSourcesDialog(true)}
+              className="flex items-center gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Sources
+            </Button>
+          </div>
         </div>
 
         {/* Content */}
@@ -185,6 +270,16 @@ const TV = () => {
           )}
         </div>
       </div>
+
+      {/* Sources management dialog */}
+      <SourcesDialog
+        open={showSourcesDialog}
+        onOpenChange={setShowSourcesDialog}
+        customSources={customSources}
+        onAddSource={handleAddSource}
+        onRemoveSource={handleRemoveSource}
+        onAddChannel={handleAddChannel}
+      />
     </div>
   );
 };
