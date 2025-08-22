@@ -20,7 +20,8 @@ const Radios = () => {
     { id: "7", name: "Nostalgie", genre: "Rétro", country: "France", frequency: "90.4 FM", streamUrl: "https://cdn.nrjaudio.fm/audio1/fr/30601/mp3_128.mp3" },
     { id: "8", name: "Fun Radio", genre: "Musique", country: "France", frequency: "101.9 FM", streamUrl: "https://streaming.radio.funradio.fr/fun-1-44-128" },
     { id: "9", name: "Europe 1", genre: "Généraliste", country: "France", frequency: "104.7 FM", streamUrl: "https://europe1.lmn.fm/europe1.mp3" },
-    { id: "10", name: "Radio Classique", genre: "Classique", country: "France", frequency: "101.1 FM", streamUrl: "https://radioclassique.ice.infomaniak.ch/radioclassique-high.mp3" }
+    { id: "10", name: "Radio Classique", genre: "Classique", country: "France", frequency: "101.1 FM", streamUrl: "https://radioclassique.ice.infomaniak.ch/radioclassique-high.mp3" },
+    { id: "11", name: "Ndeke Luka", genre: "Généraliste", country: "RCA", frequency: "Online", streamUrl: "https://www.radiondekeluka.org/popup_radio.php" }
   ];
 
   const genres = ["Tous", "Généraliste", "Musique", "International", "Jazz", "Rétro", "Classique"];
