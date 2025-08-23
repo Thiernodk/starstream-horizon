@@ -3,7 +3,7 @@ import { Settings, Zap, Cast, Clock, Volume2, VolumeX, Maximize, Minimize, Pause
 import Hls from "hls.js";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { resolveHlsSource } from "@/utils/stream";
+import { StreamResolver } from "@/utils/streamResolver";
 import TVPlayerOverlay from "./TVPlayerOverlay";
 import TVPlayerControls from "./TVPlayerControls";
 import TVPlayerSettings from "./TVPlayerSettings";
@@ -17,6 +17,7 @@ interface TVPlayerProps {
     logo: string;
     category: string;
     url: string;
+    resolvedUrl?: string;
   };
   onBack: () => void;
   channels: Array<{
@@ -71,12 +72,8 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
       setError(null);
       
       try {
-        let source = channel.url;
-        
-        // Resolve HLS source for m3u/m3u8 files
-        if (/\.(m3u8?|ts)(\?|$)/i.test(channel.url)) {
-          source = await resolveHlsSource(channel.url);
-        }
+        // Use the enhanced stream resolver
+        const source = await StreamResolver.getPlayableUrl(channel.url, channel.resolvedUrl);
 
         if (cancelled) return;
 

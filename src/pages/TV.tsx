@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useM3UParser } from "@/hooks/useM3UParser";
+import { StreamResolver } from "@/utils/streamResolver";
 import channelsBg from "@/assets/channels-bg.jpg";
 import ChannelListItem from "@/components/tv/ChannelListItem";
 import UnifiedVideoPlayer from "@/components/UnifiedVideoPlayer";
@@ -119,6 +120,14 @@ const TV = () => {
       setSelectedChannel(filtered[0]);
     }
   }, [filtered, selectedChannel]);
+
+  // Pre-resolve URLs for better performance
+  useEffect(() => {
+    if (channels.length > 0) {
+      const urls = channels.map(ch => ch.url);
+      StreamResolver.preResolveUrls(urls);
+    }
+  }, [channels]);
 
   // Use Unified Video Player when a channel is selected
   if (showPlayer && selectedChannel) {

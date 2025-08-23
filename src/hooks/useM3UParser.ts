@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { resolveHlsSource } from "@/utils/stream";
 
 interface Channel {
   id: string;
@@ -7,6 +8,7 @@ interface Channel {
   url: string;
   group: string;
   source?: string;
+  resolvedUrl?: string;
 }
 
 interface CustomSource {
@@ -94,6 +96,23 @@ export const useM3UParser = (defaultM3uUrl: string) => {
           } else if (line && !line.startsWith('#') && (currentChannel as any).name) {
             // This is the stream URL
             (currentChannel as any).url = line;
+            
+            // Pre-resolve the URL if it's an m3u/m3u8 file
+            try {
+              if (/\.m3u(\?|$)/i.test(line)) {
+                resolveHlsSource(line).then(resolvedUrl => {
+                  const channelIndex = parsedChannels.findIndex(ch => ch.url === line);
+                  if (channelIndex !== -1) {
+                    parsedChannels[channelIndex].resolvedUrl = resolvedUrl;
+                  }
+                }).catch(err => {
+                  console.warn('Failed to resolve URL:', line, err);
+                });
+              }
+            } catch (err) {
+              console.warn('Error pre-resolving URL:', line, err);
+            }
+            
             parsedChannels.push(currentChannel as Channel);
             currentChannel = {};
           }
