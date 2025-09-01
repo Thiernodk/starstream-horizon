@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Trash2, Link2 } from "lucide-react";
+import { Settings, Trash2, Link2, Tv } from "lucide-react";
 import { AddM3UDialog } from "./AddM3UDialog";
+import AddChannelDialog from "./AddChannelDialog";
 
 
 interface Source {
@@ -18,6 +19,7 @@ interface SourcesDialogProps {
   onOpenChange: (open: boolean) => void;
   customSources: Source[];
   onAddSource: (source: { name: string; url: string; type: 'M3U' }) => void;
+  onAddChannel: (channel: { name: string; url: string; logo: string; category: string }) => void;
   onRemoveSource: (sourceId: string) => void;
 }
 
@@ -25,10 +27,12 @@ export const SourcesDialog = ({
   open, 
   onOpenChange, 
   customSources, 
-  onAddSource, 
+  onAddSource,
+  onAddChannel, 
   onRemoveSource
 }: SourcesDialogProps) => {
   const [showAddM3U, setShowAddM3U] = useState(false);
+  const [showAddChannel, setShowAddChannel] = useState(false);
 
   return (
     <>
@@ -45,12 +49,11 @@ export const SourcesDialog = ({
             {/* Add buttons */}
             <div className="flex flex-wrap gap-3">
               <Button 
-                onClick={() => setShowAddM3U(true)}
-                variant="outline"
+                onClick={() => setShowAddChannel(true)}
                 className="flex items-center gap-2"
               >
-                <Link2 className="w-4 h-4" />
-                Ajouter liste M3U
+                <Tv className="w-4 h-4" />
+                Ajouter une chaîne
               </Button>
             </div>
 
@@ -114,10 +117,10 @@ export const SourcesDialog = ({
         </DialogContent>
       </Dialog>
 
-      <AddM3UDialog
-        open={showAddM3U}
-        onOpenChange={setShowAddM3U}
-        onAdd={onAddSource}
+      <AddChannelDialog
+        open={showAddChannel}
+        onOpenChange={setShowAddChannel}
+        onAddChannel={onAddChannel}
       />
     </>
   );

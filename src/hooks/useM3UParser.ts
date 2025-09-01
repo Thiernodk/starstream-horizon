@@ -35,8 +35,7 @@ export const useM3UParser = () => {
 
   // Default playlist URLs
   const defaultPlaylists = [
-    { url: "https://iptv-org.github.io/iptv/languages/fra.m3u", name: "Chaînes Françaises" },
-    { url: "https://iptv-org.github.io/iptv/categories/sports.m3u", name: "Chaînes Sport" }
+    { url: "https://iptv-org.github.io/iptv/languages/fra.m3u", name: "Chaînes Françaises" }
   ];
 
   // Load custom sources from localStorage
