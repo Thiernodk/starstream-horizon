@@ -39,9 +39,8 @@ const TV = () => {
     customSources,
     addCustomSource,
     removeCustomSource,
-    addCustomChannel,
     refresh
-  } = useM3UParser("https://iptv-org.github.io/iptv/languages/fra.m3u");
+  } = useM3UParser();
 
   const channels: ChannelItem[] = useMemo(() => {
     return m3uChannels.map(ch => ({
@@ -103,16 +102,6 @@ const TV = () => {
       title: "Source supprimée",
       description: `La source "${source?.name}" a été supprimée.`,
     });
-  };
-
-  const handleAddChannel = (channel: { name: string; url: string; logo: string; group: string; sourceId: string }) => {
-    addCustomChannel(channel);
-    toast({
-      title: "Chaîne ajoutée",
-      description: `La chaîne "${channel.name}" a été ajoutée avec succès.`,
-    });
-    // Refresh channels after adding new channel
-    setTimeout(() => refresh(), 500);
   };
 
   useEffect(() => {
@@ -287,7 +276,6 @@ const TV = () => {
         customSources={customSources}
         onAddSource={handleAddSource}
         onRemoveSource={handleRemoveSource}
-        onAddChannel={handleAddChannel}
       />
     </div>
   );

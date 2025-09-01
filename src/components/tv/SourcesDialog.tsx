@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Trash2, Link2, TvIcon, Plus } from "lucide-react";
+import { Settings, Trash2, Link2 } from "lucide-react";
 import { AddM3UDialog } from "./AddM3UDialog";
-import { AddChannelDialog } from "./AddChannelDialog";
+
 
 interface Source {
   id: string;
@@ -19,7 +19,6 @@ interface SourcesDialogProps {
   customSources: Source[];
   onAddSource: (source: { name: string; url: string; type: 'M3U' }) => void;
   onRemoveSource: (sourceId: string) => void;
-  onAddChannel: (channel: { name: string; url: string; logo: string; group: string; sourceId: string }) => void;
 }
 
 export const SourcesDialog = ({ 
@@ -27,11 +26,9 @@ export const SourcesDialog = ({
   onOpenChange, 
   customSources, 
   onAddSource, 
-  onRemoveSource,
-  onAddChannel 
+  onRemoveSource
 }: SourcesDialogProps) => {
   const [showAddM3U, setShowAddM3U] = useState(false);
-  const [showAddChannel, setShowAddChannel] = useState(false);
 
   return (
     <>
@@ -55,14 +52,6 @@ export const SourcesDialog = ({
                 <Link2 className="w-4 h-4" />
                 Ajouter liste M3U
               </Button>
-              <Button 
-                onClick={() => setShowAddChannel(true)}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <TvIcon className="w-4 h-4" />
-                Ajouter chaîne manuelle
-              </Button>
             </div>
 
             {/* Sources list */}
@@ -77,9 +66,9 @@ export const SourcesDialog = ({
                       <h4 className="font-medium text-card-foreground">Source par défaut</h4>
                       <Badge variant="secondary">Système</Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Chaînes françaises officielles (IPTV-org)
-                    </p>
+                     <p className="text-sm text-muted-foreground">
+                       Chaînes françaises et sport (IPTV-org)
+                     </p>
                   </div>
                 </div>
               </div>
@@ -89,7 +78,7 @@ export const SourcesDialog = ({
                 <div className="text-center py-8 text-muted-foreground">
                   <Settings className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>Aucune source personnalisée</p>
-                  <p className="text-sm">Ajoutez des listes M3U ou des chaînes manuelles</p>
+                  <p className="text-sm">Ajoutez des listes M3U personnalisées</p>
                 </div>
               ) : (
                 customSources.map((source) => (
@@ -129,13 +118,6 @@ export const SourcesDialog = ({
         open={showAddM3U}
         onOpenChange={setShowAddM3U}
         onAdd={onAddSource}
-      />
-
-      <AddChannelDialog
-        open={showAddChannel}
-        onOpenChange={setShowAddChannel}
-        onAdd={onAddChannel}
-        customSources={customSources}
       />
     </>
   );
