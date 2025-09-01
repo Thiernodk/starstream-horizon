@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { resolveHlsSource } from "@/utils/stream";
 
 interface Channel {
   id: string;
@@ -8,7 +7,6 @@ interface Channel {
   url: string;
   group: string;
   source?: string;
-  resolvedUrl?: string;
 }
 
 interface CustomSource {
@@ -27,23 +25,23 @@ const STORAGE_KEYS = {
   CUSTOM_CHANNELS: 'tv-custom-channels'
 };
 
-export const useM3UParser = () => {
+export const useM3UParser = (defaultM3uUrl: string) => {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [customSources, setCustomSources] = useState<CustomSource[]>([]);
+  const [customChannels, setCustomChannels] = useState<CustomChannel[]>([]);
 
-  // Default playlist URLs
-  const defaultPlaylists = [
-    { url: "https://iptv-org.github.io/iptv/languages/fra.m3u", name: "Chaînes Françaises" }
-  ];
-
-  // Load custom sources from localStorage
+  // Load custom sources and channels from localStorage
   useEffect(() => {
     const savedSources = localStorage.getItem(STORAGE_KEYS.CUSTOM_SOURCES);
+    const savedChannels = localStorage.getItem(STORAGE_KEYS.CUSTOM_CHANNELS);
     
     if (savedSources) {
       setCustomSources(JSON.parse(savedSources));
+    }
+    if (savedChannels) {
+      setCustomChannels(JSON.parse(savedChannels));
     }
   }, []);
 
@@ -96,23 +94,6 @@ export const useM3UParser = () => {
           } else if (line && !line.startsWith('#') && (currentChannel as any).name) {
             // This is the stream URL
             (currentChannel as any).url = line;
-            
-            // Pre-resolve the URL if it's an m3u/m3u8 file
-            try {
-              if (/\.m3u(\?|$)/i.test(line)) {
-                resolveHlsSource(line).then(resolvedUrl => {
-                  const channelIndex = parsedChannels.findIndex(ch => ch.url === line);
-                  if (channelIndex !== -1) {
-                    parsedChannels[channelIndex].resolvedUrl = resolvedUrl;
-                  }
-                }).catch(err => {
-                  console.warn('Failed to resolve URL:', line, err);
-                });
-              }
-            } catch (err) {
-              console.warn('Error pre-resolving URL:', line, err);
-            }
-            
             parsedChannels.push(currentChannel as Channel);
             currentChannel = {};
           }
@@ -130,16 +111,8 @@ export const useM3UParser = () => {
       setLoading(true);
       setError(null);
 
-      // Parse all default playlists
-      const allDefaultChannels: Channel[] = [];
-      for (const playlist of defaultPlaylists) {
-        try {
-          const playlistChannels = await parseM3U(playlist.url, playlist.name);
-          allDefaultChannels.push(...playlistChannels);
-        } catch (err) {
-          console.warn(`Failed to load playlist ${playlist.name}:`, err);
-        }
-      }
+      // Parse default M3U
+      const defaultChannels = await parseM3U(defaultM3uUrl, 'Default');
       
       // Parse custom M3U sources
       const customM3UChannels: Channel[] = [];
@@ -152,7 +125,17 @@ export const useM3UParser = () => {
         }
       }
 
-      const allChannels = [...allDefaultChannels, ...customM3UChannels];
+      // Combine with manual channels
+      const manualChannels: Channel[] = customChannels.map(ch => ({
+        id: ch.id,
+        name: ch.name,
+        logo: ch.logo,
+        url: ch.url,
+        group: ch.group,
+        source: customSources.find(s => s.id === ch.sourceId)?.name || 'Manual'
+      }));
+
+      const allChannels = [...defaultChannels, ...customM3UChannels, ...manualChannels];
       setChannels(allChannels);
 
     } catch (err) {
@@ -197,7 +180,7 @@ export const useM3UParser = () => {
     } finally {
       setLoading(false);
     }
-  }, [defaultPlaylists, customSources, parseM3U]);
+  }, [defaultM3uUrl, customSources, customChannels, parseM3U]);
 
   useEffect(() => {
     loadAllChannels();
@@ -212,10 +195,26 @@ export const useM3UParser = () => {
 
   const removeCustomSource = useCallback((sourceId: string) => {
     const updatedSources = customSources.filter(s => s.id !== sourceId);
+    const updatedChannels = customChannels.filter(ch => ch.sourceId !== sourceId);
     
     setCustomSources(updatedSources);
+    setCustomChannels(updatedChannels);
     localStorage.setItem(STORAGE_KEYS.CUSTOM_SOURCES, JSON.stringify(updatedSources));
-  }, [customSources]);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_CHANNELS, JSON.stringify(updatedChannels));
+  }, [customSources, customChannels]);
+
+  const addCustomChannel = useCallback((channel: Omit<CustomChannel, 'id'>) => {
+    const newChannel = { ...channel, id: Date.now().toString() };
+    const updatedChannels = [...customChannels, newChannel];
+    setCustomChannels(updatedChannels);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_CHANNELS, JSON.stringify(updatedChannels));
+  }, [customChannels]);
+
+  const removeCustomChannel = useCallback((channelId: string) => {
+    const updatedChannels = customChannels.filter(ch => ch.id !== channelId);
+    setCustomChannels(updatedChannels);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_CHANNELS, JSON.stringify(updatedChannels));
+  }, [customChannels]);
 
   return { 
     channels, 
@@ -224,6 +223,8 @@ export const useM3UParser = () => {
     customSources,
     addCustomSource,
     removeCustomSource,
+    addCustomChannel,
+    removeCustomChannel,
     refresh: loadAllChannels
   };
 };

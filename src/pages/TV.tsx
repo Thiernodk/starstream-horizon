@@ -4,10 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useM3UParser } from "@/hooks/useM3UParser";
-import { StreamResolver } from "@/utils/streamResolver";
 import channelsBg from "@/assets/channels-bg.jpg";
 import ChannelListItem from "@/components/tv/ChannelListItem";
-import TVPlayer from "@/components/tv/TVPlayer";
+import UnifiedVideoPlayer from "@/components/UnifiedVideoPlayer";
 import { SourcesDialog } from "@/components/tv/SourcesDialog";
 import { toast } from "@/hooks/use-toast";
 
@@ -31,7 +30,6 @@ const TV = () => {
   const [showPlayer, setShowPlayer] = useState(false);
   const [selectedSource, setSelectedSource] = useState<string>("all");
   const [showSourcesDialog, setShowSourcesDialog] = useState(false);
-  const [channels, setChannels] = useState<ChannelItem[]>([]);
 
   const { 
     channels: m3uChannels, 
@@ -40,12 +38,12 @@ const TV = () => {
     customSources,
     addCustomSource,
     removeCustomSource,
+    addCustomChannel,
     refresh
-  } = useM3UParser();
+  } = useM3UParser("https://iptv-org.github.io/iptv/languages/fra.m3u");
 
-  // Update channels when m3u channels change
-  useEffect(() => {
-    const m3uChannelItems = m3uChannels.map(ch => ({
+  const channels: ChannelItem[] = useMemo(() => {
+    return m3uChannels.map(ch => ({
       id: ch.id,
       name: ch.name,
       logo: ch.logo,
@@ -54,12 +52,6 @@ const TV = () => {
       url: ch.url,
       source: ch.source || "Default"
     }));
-    
-    // Keep manual channels and update with m3u channels
-    setChannels(prev => {
-      const manualChannels = prev.filter(ch => ch.source === "Manuel");
-      return [...m3uChannelItems, ...manualChannels];
-    });
   }, [m3uChannels]);
 
   // Get unique sources for filter
@@ -103,27 +95,6 @@ const TV = () => {
     setTimeout(() => refresh(), 500);
   };
 
-  const handleAddChannel = (channel: { name: string; url: string; logo: string; category: string }) => {
-    // Add individual channel as custom source
-    const customChannel = {
-      id: `manual-${Date.now()}`,
-      name: channel.name,
-      logo: channel.logo,
-      url: channel.url,
-      category: channel.category,
-      isLive: true,
-      source: "Manuel"
-    };
-    
-    // Add to the channels list directly
-    setChannels(prev => [...prev, customChannel]);
-    
-    toast({
-      title: "Chaîne ajoutée",
-      description: `La chaîne "${channel.name}" a été ajoutée avec succès.`,
-    });
-  };
-
   const handleRemoveSource = (sourceId: string) => {
     const source = customSources.find(s => s.id === sourceId);
     removeCustomSource(sourceId);
@@ -133,33 +104,36 @@ const TV = () => {
     });
   };
 
+  const handleAddChannel = (channel: { name: string; url: string; logo: string; group: string; sourceId: string }) => {
+    addCustomChannel(channel);
+    toast({
+      title: "Chaîne ajoutée",
+      description: `La chaîne "${channel.name}" a été ajoutée avec succès.`,
+    });
+    // Refresh channels after adding new channel
+    setTimeout(() => refresh(), 500);
+  };
+
   useEffect(() => {
     if (!selectedChannel && filtered.length > 0) {
       setSelectedChannel(filtered[0]);
     }
   }, [filtered, selectedChannel]);
 
-  // Pre-resolve URLs for better performance
-  useEffect(() => {
-    if (channels.length > 0) {
-      const urls = channels.map(ch => ch.url);
-      StreamResolver.preResolveUrls(urls);
-    }
-  }, [channels]);
-
-  // Use TV Player when a channel is selected
+  // Use Unified Video Player when a channel is selected
   if (showPlayer && selectedChannel) {
     return (
-      <div className="min-h-screen bg-background">
-        <TVPlayer
-          channel={selectedChannel}
-          onBack={() => setShowPlayer(false)}
-          channels={channels}
-          onChannelChange={(channel) => {
-            setSelectedChannel(channel);
-          }}
-        />
-      </div>
+      <UnifiedVideoPlayer
+        src={selectedChannel.url}
+        title={selectedChannel.name}
+        description={`Regardez ${selectedChannel.name} en direct. Chaîne de la catégorie ${selectedChannel.category}.`}
+        type="hls"
+        onBack={() => setShowPlayer(false)}
+        metadata={{
+          genre: selectedChannel.category,
+          duration: "EN DIRECT",
+        }}
+      />
     );
   }
 
@@ -303,8 +277,8 @@ const TV = () => {
         onOpenChange={setShowSourcesDialog}
         customSources={customSources}
         onAddSource={handleAddSource}
-        onAddChannel={handleAddChannel}
         onRemoveSource={handleRemoveSource}
+        onAddChannel={handleAddChannel}
       />
     </div>
   );

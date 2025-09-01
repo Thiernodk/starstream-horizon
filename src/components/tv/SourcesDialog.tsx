@@ -2,10 +2,9 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Trash2, Link2, Tv } from "lucide-react";
+import { Settings, Trash2, Link2, TvIcon, Plus } from "lucide-react";
 import { AddM3UDialog } from "./AddM3UDialog";
-import AddChannelDialog from "./AddChannelDialog";
-
+import { AddChannelDialog } from "./AddChannelDialog";
 
 interface Source {
   id: string;
@@ -19,17 +18,17 @@ interface SourcesDialogProps {
   onOpenChange: (open: boolean) => void;
   customSources: Source[];
   onAddSource: (source: { name: string; url: string; type: 'M3U' }) => void;
-  onAddChannel: (channel: { name: string; url: string; logo: string; category: string }) => void;
   onRemoveSource: (sourceId: string) => void;
+  onAddChannel: (channel: { name: string; url: string; logo: string; group: string; sourceId: string }) => void;
 }
 
 export const SourcesDialog = ({ 
   open, 
   onOpenChange, 
   customSources, 
-  onAddSource,
-  onAddChannel, 
-  onRemoveSource
+  onAddSource, 
+  onRemoveSource,
+  onAddChannel 
 }: SourcesDialogProps) => {
   const [showAddM3U, setShowAddM3U] = useState(false);
   const [showAddChannel, setShowAddChannel] = useState(false);
@@ -49,11 +48,20 @@ export const SourcesDialog = ({
             {/* Add buttons */}
             <div className="flex flex-wrap gap-3">
               <Button 
-                onClick={() => setShowAddChannel(true)}
+                onClick={() => setShowAddM3U(true)}
+                variant="outline"
                 className="flex items-center gap-2"
               >
-                <Tv className="w-4 h-4" />
-                Ajouter une chaîne
+                <Link2 className="w-4 h-4" />
+                Ajouter liste M3U
+              </Button>
+              <Button 
+                onClick={() => setShowAddChannel(true)}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <TvIcon className="w-4 h-4" />
+                Ajouter chaîne manuelle
               </Button>
             </div>
 
@@ -69,9 +77,9 @@ export const SourcesDialog = ({
                       <h4 className="font-medium text-card-foreground">Source par défaut</h4>
                       <Badge variant="secondary">Système</Badge>
                     </div>
-                     <p className="text-sm text-muted-foreground">
-                       Chaînes françaises et sport (IPTV-org)
-                     </p>
+                    <p className="text-sm text-muted-foreground">
+                      Chaînes françaises officielles (IPTV-org)
+                    </p>
                   </div>
                 </div>
               </div>
@@ -81,7 +89,7 @@ export const SourcesDialog = ({
                 <div className="text-center py-8 text-muted-foreground">
                   <Settings className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>Aucune source personnalisée</p>
-                  <p className="text-sm">Ajoutez des listes M3U personnalisées</p>
+                  <p className="text-sm">Ajoutez des listes M3U ou des chaînes manuelles</p>
                 </div>
               ) : (
                 customSources.map((source) => (
@@ -117,10 +125,17 @@ export const SourcesDialog = ({
         </DialogContent>
       </Dialog>
 
+      <AddM3UDialog
+        open={showAddM3U}
+        onOpenChange={setShowAddM3U}
+        onAdd={onAddSource}
+      />
+
       <AddChannelDialog
         open={showAddChannel}
         onOpenChange={setShowAddChannel}
-        onAddChannel={onAddChannel}
+        onAdd={onAddChannel}
+        customSources={customSources}
       />
     </>
   );

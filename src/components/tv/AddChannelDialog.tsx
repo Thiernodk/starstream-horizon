@@ -1,66 +1,56 @@
 import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Link, Image } from "lucide-react";
+import { TvIcon, Plus } from "lucide-react";
 
 interface AddChannelDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddChannel: (channel: {
-    name: string;
-    url: string;
-    logo: string;
-    category: string;
-  }) => void;
+  onAdd: (channel: { name: string; url: string; logo: string; group: string; sourceId: string }) => void;
+  customSources: Array<{ id: string; name: string; type: string }>;
 }
 
-const AddChannelDialog = ({ open, onOpenChange, onAddChannel }: AddChannelDialogProps) => {
+export const AddChannelDialog = ({ open, onOpenChange, onAdd, customSources }: AddChannelDialogProps) => {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
-  const [logoType, setLogoType] = useState<"url" | "upload">("url");
-  const [logoUrl, setLogoUrl] = useState("");
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [category, setCategory] = useState("");
+  const [logo, setLogo] = useState("");
+  const [group, setGroup] = useState("");
+  const [sourceId, setSourceId] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Get or create a Manual source
+  const manualSource = customSources.find(s => s.type === 'Manual') || { id: 'manual', name: 'Chaînes manuelles', type: 'Manual' };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!name.trim() || !url.trim()) return;
 
-    let finalLogoUrl = logoUrl;
-    
-    // If file upload is selected and a file is chosen
-    if (logoType === "upload" && logoFile) {
-      // Create a local URL for the uploaded file
-      finalLogoUrl = URL.createObjectURL(logoFile);
-    } else if (!finalLogoUrl) {
-      // Generate placeholder if no logo provided
-      finalLogoUrl = `https://via.placeholder.com/48x48/0EA5E9/FFFFFF?text=${encodeURIComponent(name.charAt(0).toUpperCase())}`;
-    }
+    setLoading(true);
+    try {
+      const finalLogo = logo.trim() || `https://via.placeholder.com/48x48/0EA5E9/FFFFFF?text=${encodeURIComponent(name.charAt(0))}`;
+      const finalGroup = group.trim() || 'Général';
+      const finalSourceId = sourceId || manualSource.id;
 
-    onAddChannel({
-      name: name.trim(),
-      url: url.trim(),
-      logo: finalLogoUrl,
-      category: category.trim() || "Général"
-    });
-
-    // Reset form
-    setName("");
-    setUrl("");
-    setLogoUrl("");
-    setLogoFile(null);
-    setCategory("");
-    onOpenChange(false);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setLogoFile(file);
+      onAdd({ 
+        name: name.trim(), 
+        url: url.trim(), 
+        logo: finalLogo, 
+        group: finalGroup,
+        sourceId: finalSourceId 
+      });
+      
+      // Reset form
+      setName("");
+      setUrl("");
+      setLogo("");
+      setGroup("");
+      setSourceId("");
+      onOpenChange(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,106 +58,85 @@ const AddChannelDialog = ({ open, onOpenChange, onAddChannel }: AddChannelDialog
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Ajouter une chaîne manuellement</DialogTitle>
-          <DialogDescription>
-            Ajoutez une nouvelle chaîne avec son nom, lien M3U et logo.
-          </DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            <TvIcon className="w-5 h-5 text-primary" />
+            Ajouter une chaîne
+          </DialogTitle>
         </DialogHeader>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="channel-name">Nom de la chaîne *</Label>
+            <Label htmlFor="channel-name">Nom de la chaîne</Label>
             <Input
               id="channel-name"
+              placeholder="ex: StarTimes Sports 1"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="ex: France 24"
               required
             />
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="channel-url">Lien M3U/M3U8 *</Label>
+            <Label htmlFor="stream-url">URL du stream</Label>
             <Input
-              id="channel-url"
+              id="stream-url"
+              type="url"
+              placeholder="https://example.com/stream.m3u8"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com/stream.m3u8"
               required
             />
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="channel-category">Catégorie</Label>
+            <Label htmlFor="logo-url">URL du logo (optionnel)</Label>
             <Input
-              id="channel-category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="ex: Sport, Cinéma, Général..."
+              id="logo-url"
+              type="url"
+              placeholder="https://example.com/logo.png"
+              value={logo}
+              onChange={(e) => setLogo(e.target.value)}
             />
           </div>
-
-          <div className="space-y-3">
-            <Label>Logo de la chaîne</Label>
-            
-            <Select value={logoType} onValueChange={(value: "url" | "upload") => setLogoType(value)}>
+          <div className="space-y-2">
+            <Label htmlFor="channel-group">Catégorie</Label>
+            <Input
+              id="channel-group"
+              placeholder="ex: Sport, Cinéma, Infos..."
+              value={group}
+              onChange={(e) => setGroup(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="source-select">Source</Label>
+            <Select value={sourceId} onValueChange={setSourceId}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Sélectionner une source" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="url">
-                  <div className="flex items-center gap-2">
-                    <Link className="w-4 h-4" />
-                    Lien URL
-                  </div>
-                </SelectItem>
-                <SelectItem value="upload">
-                  <div className="flex items-center gap-2">
-                    <Upload className="w-4 h-4" />
-                    Importer un fichier
-                  </div>
-                </SelectItem>
+                <SelectItem value={manualSource.id}>{manualSource.name}</SelectItem>
+                {customSources.filter(s => s.type === 'Manual' && s.id !== manualSource.id).map(source => (
+                  <SelectItem key={source.id} value={source.id}>
+                    {source.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-
-            {logoType === "url" ? (
-              <Input
-                value={logoUrl}
-                onChange={(e) => setLogoUrl(e.target.value)}
-                placeholder="https://example.com/logo.png"
-              />
-            ) : (
-              <div className="space-y-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="logo-upload"
-                />
-                <Label
-                  htmlFor="logo-upload"
-                  className="flex items-center justify-center gap-2 h-10 px-4 py-2 border border-input rounded-md cursor-pointer hover:bg-accent transition-colors"
-                >
-                  <Image className="w-4 h-4" />
-                  {logoFile ? logoFile.name : "Choisir un fichier..."}
-                </Label>
-              </div>
-            )}
           </div>
-
-          <div className="flex justify-end gap-2 pt-4">
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={!name.trim() || !url.trim()}>
-              Ajouter la chaîne
+            <Button type="submit" disabled={loading || !name.trim() || !url.trim()}>
+              {loading ? (
+                "Ajout..."
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  Ajouter
+                </>
+              )}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
 };
-
-export default AddChannelDialog;

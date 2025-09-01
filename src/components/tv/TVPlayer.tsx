@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Settings, Zap, Cast, Clock, Volume2, VolumeX, Maximize, Minimize, Pause, Play, RotateCcw, RotateCw, Square, Mic, Subtitles, Video, List, PictureInPicture2, ZoomIn } from "lucide-react";
+import { Settings, Zap, Cast, Clock, Volume2, VolumeX, Maximize, Minimize, Pause, Play, RotateCcw, RotateCw, Square, Mic, Subtitles, Video, List, PictureInPicture2 } from "lucide-react";
 import Hls from "hls.js";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { StreamResolver } from "@/utils/streamResolver";
+import { resolveHlsSource } from "@/utils/stream";
 import TVPlayerOverlay from "./TVPlayerOverlay";
 import TVPlayerControls from "./TVPlayerControls";
 import TVPlayerSettings from "./TVPlayerSettings";
@@ -17,7 +17,6 @@ interface TVPlayerProps {
     logo: string;
     category: string;
     url: string;
-    resolvedUrl?: string;
   };
   onBack: () => void;
   channels: Array<{
@@ -48,7 +47,6 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
   const [subtitles, setSubtitles] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPiP, setIsPiP] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(1);
 
   let controlsTimeout = useRef<NodeJS.Timeout>();
 
@@ -73,8 +71,12 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
       setError(null);
       
       try {
-        // Use the enhanced stream resolver
-        const source = await StreamResolver.getPlayableUrl(channel.url, channel.resolvedUrl);
+        let source = channel.url;
+        
+        // Resolve HLS source for m3u/m3u8 files
+        if (/\.(m3u8?|ts)(\?|$)/i.test(channel.url)) {
+          source = await resolveHlsSource(channel.url);
+        }
 
         if (cancelled) return;
 
@@ -256,15 +258,6 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
     });
   };
 
-  const handleZoom = () => {
-    setZoomLevel(prev => {
-      const levels = [1, 1.25, 1.5, 2];
-      const currentIndex = levels.indexOf(prev);
-      const nextIndex = (currentIndex + 1) % levels.length;
-      return levels[nextIndex];
-    });
-  };
-
   return (
     <>
       <div 
@@ -280,7 +273,6 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
           className="w-full h-full object-cover"
           crossOrigin="anonymous"
           muted={isMuted}
-          style={{ transform: `scale(${zoomLevel})` }}
         />
 
         {/* Loading Overlay */}
@@ -458,10 +450,6 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
             <Button variant="outline" size="sm" onClick={toggleFullscreen}>
               <Maximize className="w-4 h-4 mr-2" />
               Plein écran
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleZoom}>
-              <ZoomIn className="w-4 h-4 mr-2" />
-              Zoom {Math.round(zoomLevel * 100)}%
             </Button>
           </div>
         </div>
