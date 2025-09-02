@@ -205,9 +205,18 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
   };
 
   const toggleFullscreen = () => {
+    const playerContainer = document.querySelector('.tv-player-container');
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
+      if (playerContainer) {
+        playerContainer.requestFullscreen();
+      } else {
+        document.documentElement.requestFullscreen();
+      }
       setIsFullscreen(true);
+      // Force landscape orientation in fullscreen
+      if ('orientation' in screen && 'lock' in (screen as any).orientation) {
+        (screen as any).orientation.lock('landscape').catch(() => {});
+      }
     } else {
       document.exitFullscreen();
       setIsFullscreen(false);
@@ -259,7 +268,7 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className={`tv-player-container ${isFullscreen ? 'fixed inset-0 z-50 bg-black' : 'min-h-screen bg-black flex flex-col'}`}>
       {/* Header with channel info (Portrait mode) */}
       {!isFullscreen && (
         <div className="flex items-center justify-between p-4 text-white">
@@ -301,7 +310,7 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
       {/* Video container */}
       <div 
         className={`relative bg-black overflow-hidden ${
-          isFullscreen ? 'flex-1' : 'aspect-video mx-4 rounded-lg'
+          isFullscreen ? 'w-full h-full' : 'aspect-video mx-4 rounded-lg'
         }`}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setShowControls(false)}

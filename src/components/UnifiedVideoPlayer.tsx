@@ -184,10 +184,21 @@ const UnifiedVideoPlayer = ({
   };
 
   const toggleFullscreen = () => {
+    const playerContainer = document.querySelector('.unified-player-container');
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
+      if (playerContainer) {
+        playerContainer.requestFullscreen();
+      } else {
+        document.documentElement.requestFullscreen();
+      }
+      setIsFullscreen(true);
+      // Force landscape orientation in fullscreen
+      if ('orientation' in screen && 'lock' in (screen as any).orientation) {
+        (screen as any).orientation.lock('landscape').catch(() => {});
+      }
     } else {
       document.exitFullscreen();
+      setIsFullscreen(false);
     }
   };
 
@@ -199,7 +210,7 @@ const UnifiedVideoPlayer = ({
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className={`unified-player-container ${isFullscreen ? 'fixed inset-0 z-50 bg-black' : 'min-h-screen bg-black'}`}>
       {/* Header - only in portrait mode */}
       {!isFullscreen && (
         <div className="flex items-center gap-4 p-4 bg-black text-white">
@@ -223,9 +234,7 @@ const UnifiedVideoPlayer = ({
       )}
 
       {/* Video Container */}
-      <div className={`relative w-full bg-black ${
-        isFullscreen ? 'h-screen' : 'aspect-video'
-      }`}>
+      <div className={`relative ${isFullscreen ? 'w-full h-full' : 'aspect-video mx-4 rounded-lg overflow-hidden'} bg-black`}>
         {/* Video Element */}
         <video
           ref={videoRef}
