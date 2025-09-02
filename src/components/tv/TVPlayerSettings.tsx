@@ -23,11 +23,10 @@ const TVPlayerSettings = ({
   onSubtitlesChange,
 }: TVPlayerSettingsProps) => {
   const qualityOptions = [
-    { value: "auto", label: "Automatique" },
-    { value: "4k", label: "4K (2160p)" },
-    { value: "fhd", label: "Full HD (1080p)" },
-    { value: "hd", label: "HD (720p)" },
-    { value: "sd", label: "SD (480p)" },
+    { value: "480p", label: "480p (Défaut)" },
+    { value: "720p", label: "720p" },
+    { value: "1080p", label: "1080p" },
+    { value: "auto", label: "Auto" },
   ];
 
   const audioTracks = [

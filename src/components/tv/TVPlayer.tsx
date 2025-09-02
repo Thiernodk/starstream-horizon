@@ -42,7 +42,7 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [quality, setQuality] = useState("auto");
+  const [quality, setQuality] = useState("480p");
   const [audioTrack, setAudioTrack] = useState(0);
   const [subtitles, setSubtitles] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -85,11 +85,12 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
         } else if (Hls.isSupported()) {
           hls = new Hls({ 
             enableWorker: true,
-            startLevel: -1, // Auto quality
+            startLevel: 1, // Start with 480p
             capLevelToPlayerSize: true,
-            maxBufferLength: 30,
-            maxMaxBufferLength: 600,
-            maxBufferSize: 60 * 1000 * 1000,
+            maxBufferLength: 10,
+            maxMaxBufferLength: 30,
+            maxBufferSize: 30 * 1000 * 1000,
+            lowLatencyMode: false,
           });
           
           hls.loadSource(source);
@@ -220,6 +221,10 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
     } else {
       document.exitFullscreen();
       setIsFullscreen(false);
+      // Unlock orientation when exiting fullscreen
+      if ('orientation' in screen && 'unlock' in (screen as any).orientation) {
+        (screen as any).orientation.unlock();
+      }
     }
   };
 
