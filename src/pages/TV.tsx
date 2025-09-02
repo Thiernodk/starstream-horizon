@@ -123,14 +123,12 @@ const TV = () => {
   // Use TV Player when a channel is selected - Molotov style
   if (showPlayer && selectedChannel) {
     return (
-      <div className="min-h-screen bg-black">
-        <TVPlayer
-          channel={selectedChannel}
-          onBack={() => setShowPlayer(false)}
-          channels={channels}
-          onChannelChange={(ch) => setSelectedChannel(ch)}
-        />
-      </div>
+      <TVPlayer
+        channel={selectedChannel}
+        onBack={() => setShowPlayer(false)}
+        channels={channels}
+        onChannelChange={(ch) => setSelectedChannel(ch)}
+      />
     );
   }
 

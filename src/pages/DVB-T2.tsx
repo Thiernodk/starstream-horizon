@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import DVBVideoPlayer from "@/components/DVBVideoPlayer";
+import UnifiedVideoPlayer from "@/components/UnifiedVideoPlayer";
 
 const DVBT2 = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,9 +41,17 @@ const DVBT2 = () => {
 
   if (showPlayer && selectedChannel) {
     return (
-      <DVBVideoPlayer
-        channel={selectedChannel}
+      <UnifiedVideoPlayer
+        src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+        title={selectedChannel.name}
+        description={`Chaîne TNT ${selectedChannel.category}`}
+        type="video"
         onBack={() => setShowPlayer(false)}
+        metadata={{
+          genre: selectedChannel.category,
+          year: "HD",
+          duration: "Direct"
+        }}
       />
     );
   }
