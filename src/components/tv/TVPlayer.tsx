@@ -259,10 +259,49 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-black flex flex-col">
+      {/* Header with channel info (Portrait mode) */}
+      {!isFullscreen && (
+        <div className="flex items-center justify-between p-4 text-white">
+          <div className="flex items-center gap-3">
+            <img
+              src={channel.logo}
+              alt={channel.name}
+              className="w-8 h-8 object-contain"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "/placeholder.svg";
+              }}
+            />
+            <div>
+              <h1 className="text-lg font-semibold">{channel.name}</h1>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={togglePiP} className="text-white">
+              <Cast className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onBack} className="text-white">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M18 6L6 18M6 6l12 12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Program title (Portrait mode) */}
+      {!isFullscreen && (
+        <div className="px-4 pb-4 text-white">
+          <h2 className="text-xl font-bold">{currentProgram.title}</h2>
+          <p className="text-sm text-gray-300">{currentProgram.description}</p>
+        </div>
+      )}
+
+      {/* Video container */}
       <div 
-        className={`relative w-full bg-black overflow-hidden transition-all duration-300 ${
-          isFullscreen ? 'h-screen' : 'h-[60vh] max-w-md mx-auto mt-4 rounded-lg'
+        className={`relative bg-black overflow-hidden ${
+          isFullscreen ? 'flex-1' : 'aspect-video mx-4 rounded-lg'
         }`}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setShowControls(false)}
@@ -270,7 +309,7 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
         {/* Video Element */}
         <video
           ref={videoRef}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           crossOrigin="anonymous"
           muted={isMuted}
         />
@@ -367,94 +406,51 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
         )}
       </div>
 
-      {/* Bottom info + controls (portrait mode) */}
+      {/* Bottom controls with LIVE indicator and channel list button */}
       {!isFullscreen && (
-        <div className="max-w-md mx-auto px-4 py-3 space-y-3">
-          {/* Info */}
-          <div className="flex items-start gap-3">
-            <img
-              src={channel.logo}
-              alt={channel.name}
-              className="w-10 h-10 rounded-md object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = "/placeholder.svg";
-              }}
-            />
-            <div className="flex-1">
-              <div className="text-base font-semibold">{currentProgram.title}</div>
-              <div className="text-sm text-muted-foreground">{currentProgram.description}</div>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                <span>{currentProgram.startTime} - {currentProgram.endTime}</span>
-                <span className="px-2 py-0.5 bg-destructive rounded-full text-destructive-foreground">LIVE</span>
-              </div>
-              <div className="mt-2 h-1 w-full bg-muted rounded-full">
-                <div className="h-1 bg-primary rounded-full" style={{ width: `${currentProgram.progress}%` }} />
-              </div>
-            </div>
+        <div className="mt-auto p-4 space-y-4">
+          {/* Time and Live indicator */}
+          <div className="flex items-center justify-between text-white text-sm">
+            <span>{getCurrentTime()}</span>
+            <span className="flex items-center gap-2">
+              <span className="px-2 py-1 bg-red-600 rounded text-xs font-medium">LIVE</span>
+              <Cast className="w-4 h-4" />
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </span>
           </div>
 
-          {/* Main controls */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5">
-              <Button variant="ghost" size="icon" onClick={() => handleSeek(-10)} aria-label="-10s">
-                <RotateCcw className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={togglePlay} aria-label="Lecture/Pause">
-                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => handleSeek(10)} aria-label="+10s">
-                <RotateCw className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={restartProgram} aria-label="Recommencer">
-                <Square className="w-5 h-5" />
-              </Button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={toggleMute} aria-label="Muet">
-                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-              </Button>
-              <div className="w-24">
-                <Slider value={volume} onValueChange={handleVolumeChange} max={1} step={0.1} />
-              </div>
-            </div>
+          {/* Progress bar */}
+          <div className="w-full h-1 bg-gray-700 rounded-full">
+            <div className="h-1 bg-white rounded-full" style={{ width: `${currentProgram.progress}%` }} />
           </div>
 
-          {/* Secondary actions */}
-          <div className="flex items-center flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowEPG(true)}>
-              <Clock className="w-4 h-4 mr-2" />
-              Programme TV
+          {/* Bottom action buttons */}
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="ghost" 
+              className="text-white flex items-center gap-2 px-3 py-2"
+              onClick={() => setShowZapList(true)}
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" strokeWidth="2"/>
+                <line x1="9" y1="3" x2="9" y2="21" strokeWidth="2"/>
+              </svg>
+              TOUTES LES CHAÎNES
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowZapList(true)}>
-              <List className="w-4 h-4 mr-2" />
-              Zap
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
-              <Video className="w-4 h-4 mr-2" />
-              Qualité
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
-              <Mic className="w-4 h-4 mr-2" />
-              Audio
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
-              <Subtitles className="w-4 h-4 mr-2" />
-              Sous-titres
-            </Button>
-            <Button variant="outline" size="sm" onClick={togglePiP}>
-              <PictureInPicture2 className="w-4 h-4 mr-2" />
-              PiP
-            </Button>
-            <Button variant="outline" size="sm" onClick={toggleFullscreen}>
-              <Maximize className="w-4 h-4 mr-2" />
-              Plein écran
+            <Button 
+              variant="ghost" 
+              className="text-white flex items-center gap-2 px-3 py-2"
+              onClick={() => setShowEPG(true)}
+            >
+              <Clock className="w-5 h-5" />
+              REVOIR / À SUIVRE
             </Button>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useM3UParser } from "@/hooks/useM3UParser";
 import channelsBg from "@/assets/channels-bg.jpg";
 import ChannelListItem from "@/components/tv/ChannelListItem";
-import UnifiedVideoPlayer from "@/components/UnifiedVideoPlayer";
+import TVPlayer from "@/components/tv/TVPlayer";
 import { SourcesDialog } from "@/components/tv/SourcesDialog";
 import { toast } from "@/hooks/use-toast";
 
@@ -120,20 +120,17 @@ const TV = () => {
     }
   }, [filtered, selectedChannel]);
 
-  // Use Unified Video Player when a channel is selected
+  // Use TV Player when a channel is selected - Molotov style
   if (showPlayer && selectedChannel) {
     return (
-      <UnifiedVideoPlayer
-        src={selectedChannel.url}
-        title={selectedChannel.name}
-        description={`Regardez ${selectedChannel.name} en direct. Chaîne de la catégorie ${selectedChannel.category}.`}
-        type="hls"
-        onBack={() => setShowPlayer(false)}
-        metadata={{
-          genre: selectedChannel.category,
-          duration: "EN DIRECT",
-        }}
-      />
+      <div className="min-h-screen bg-black">
+        <TVPlayer
+          channel={selectedChannel}
+          onBack={() => setShowPlayer(false)}
+          channels={channels}
+          onChannelChange={(ch) => setSelectedChannel(ch)}
+        />
+      </div>
     );
   }
 
