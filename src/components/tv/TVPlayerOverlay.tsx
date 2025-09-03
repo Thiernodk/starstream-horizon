@@ -29,10 +29,16 @@ const TVPlayerOverlay = ({
         showControls ? "opacity-100" : "opacity-0"
       }`}>
         <div className="bg-gradient-to-b from-black/80 to-transparent p-6">
-          <div className="flex justify-center">
+          <div className="flex justify-between items-start">
             <div className="flex items-center gap-2 bg-black/50 rounded-lg px-4 py-2">
               <Clock className="w-4 h-4 text-primary" />
-              <span className="text-white font-mono text-lg">{currentTime}</span>
+              <span className="text-white font-mono text-xl font-bold">{currentTime}</span>
+            </div>
+            <div className="text-right">
+              <h3 className="text-white text-lg font-semibold">{channel.name}</h3>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="px-2 py-1 bg-red-600 rounded text-xs font-medium text-white">EN DIRECT</span>
+              </div>
             </div>
           </div>
         </div>

@@ -1,16 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Settings, Zap, Cast, Clock, Volume2, VolumeX, Maximize, Minimize, Pause, Play, RotateCcw, RotateCw, Square, Mic, Subtitles, Video, List, PictureInPicture2 } from "lucide-react";
-import Hls from "hls.js";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { resolveHlsSource } from "@/utils/stream";
 import TVPlayerOverlay from "./TVPlayerOverlay";
 import TVPlayerControls from "./TVPlayerControls";
 import TVPlayerSettings from "./TVPlayerSettings";
 import TVZapList from "./TVZapList";
 import TVEPGOverlay from "./TVEPGOverlay";
 
-interface TVPlayerProps {
+interface TVPlayerDemoProps {
   channel: {
     id: string;
     name: string;
@@ -29,7 +27,7 @@ interface TVPlayerProps {
   onChannelChange: (channel: any) => void;
 }
 
-const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps) => {
+const TVPlayerDemo = ({ channel, onBack, channels, onChannelChange }: TVPlayerDemoProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,96 +61,50 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
     const video = videoRef.current;
     if (!video) return;
 
-    let hls: Hls | null = null;
-    let cancelled = false;
-
-    const setup = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        let source = channel.url;
-        
-        // Resolve HLS source for m3u/m3u8 files
-        if (/\.(m3u8?|ts)(\?|$)/i.test(channel.url)) {
-          source = await resolveHlsSource(channel.url);
-        }
-
-        if (cancelled) return;
-
-        if (video.canPlayType("application/vnd.apple.mpegurl")) {
-          video.src = source;
-        } else if (Hls.isSupported()) {
-          hls = new Hls({ 
-            enableWorker: true,
-            startLevel: 1, // Start with 480p
-            capLevelToPlayerSize: true,
-            maxBufferLength: 10,
-            maxMaxBufferLength: 30,
-            maxBufferSize: 30 * 1000 * 1000,
-            lowLatencyMode: false,
-          });
-          
-          hls.loadSource(source);
-          hls.attachMedia(video);
-          
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            setIsLoading(false);
-            video.play().catch(err => {
-              console.warn("Autoplay failed:", err);
-              setIsLoading(false);
-            });
-          });
-
-          hls.on(Hls.Events.ERROR, (event, data) => {
-            console.error("HLS Error:", data);
-            if (data.fatal) {
-              setError("Erreur de diffusion. Veuillez réessayer.");
-              setIsLoading(false);
-            }
-          });
-        } else {
-          video.src = source;
-          setIsLoading(false);
-        }
-
-        const updateTime = () => setCurrentTime(video.currentTime);
-        const updateDuration = () => setDuration(video.duration);
-        const handleLoadStart = () => setIsLoading(true);
-        const handleCanPlay = () => setIsLoading(false);
-
-        video.addEventListener("timeupdate", updateTime);
-        video.addEventListener("loadedmetadata", updateDuration);
-        video.addEventListener("loadstart", handleLoadStart);
-        video.addEventListener("canplay", handleCanPlay);
-        video.addEventListener("play", () => setIsPlaying(true));
-        video.addEventListener("pause", () => setIsPlaying(false));
-
-        return () => {
-          video.removeEventListener("timeupdate", updateTime);
-          video.removeEventListener("loadedmetadata", updateDuration);
-          video.removeEventListener("loadstart", handleLoadStart);
-          video.removeEventListener("canplay", handleCanPlay);
-          video.removeEventListener("play", () => setIsPlaying(true));
-          video.removeEventListener("pause", () => setIsPlaying(false));
-        };
-      } catch (err) {
-        console.error("Setup error:", err);
-        setError("Impossible de charger la chaîne.");
+    // Use demo video for testing
+    const demoVideo = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+    
+    setIsLoading(true);
+    setError(null);
+    
+    video.src = demoVideo;
+    video.load();
+    
+    const handleLoadStart = () => setIsLoading(true);
+    const handleCanPlay = () => {
+      setIsLoading(false);
+      video.play().catch(err => {
+        console.warn("Autoplay failed:", err);
         setIsLoading(false);
-      }
+      });
     };
+    const updateTime = () => setCurrentTime(video.currentTime);
+    const updateDuration = () => setDuration(video.duration);
 
-    const cleanup = setup();
+    video.addEventListener("loadstart", handleLoadStart);
+    video.addEventListener("canplay", handleCanPlay);
+    video.addEventListener("timeupdate", updateTime);
+    video.addEventListener("loadedmetadata", updateDuration);
+    video.addEventListener("play", () => setIsPlaying(true));
+    video.addEventListener("pause", () => setIsPlaying(false));
+    video.addEventListener("error", () => {
+      setError("Erreur de lecture vidéo");
+      setIsLoading(false);
+    });
 
     return () => {
-      cancelled = true;
-      if (hls) {
-        hls.destroy();
-      }
-      cleanup?.then(dispose => dispose?.());
+      video.removeEventListener("loadstart", handleLoadStart);
+      video.removeEventListener("canplay", handleCanPlay);
+      video.removeEventListener("timeupdate", updateTime);
+      video.removeEventListener("loadedmetadata", updateDuration);
+      video.removeEventListener("play", () => setIsPlaying(true));
+      video.removeEventListener("pause", () => setIsPlaying(false));
+      video.removeEventListener("error", () => {
+        setError("Erreur de lecture vidéo");
+        setIsLoading(false);
+      });
     };
-  }, [channel.url]);
+  }, [channel.id]);
 
   // Auto-hide controls
   useEffect(() => {
@@ -273,7 +225,7 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
   };
 
   return (
-    <div className={`tv-player-container ${isFullscreen ? 'fixed inset-0 z-50 bg-black' : 'min-h-screen bg-black flex flex-col'}`}>
+    <div className={`tv-player-container ${isFullscreen ? 'fixed inset-0 z-50 bg-black landscape' : 'min-h-screen bg-black flex flex-col portrait'}`}>
       {/* Header with channel info (Portrait mode) */}
       {!isFullscreen && (
         <div className="flex items-center justify-between p-4 text-white">
@@ -463,6 +415,14 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
               <Clock className="w-5 h-5" />
               REVOIR / À SUIVRE
             </Button>
+            <Button 
+              variant="ghost" 
+              className="text-white flex items-center gap-2 px-3 py-2"
+              onClick={toggleFullscreen}
+            >
+              <Maximize className="w-5 h-5" />
+              PLEIN ÉCRAN
+            </Button>
           </div>
         </div>
       )}
@@ -470,4 +430,4 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
   );
 };
 
-export default TVPlayer;
+export default TVPlayerDemo;
