@@ -20,6 +20,8 @@ interface SourcesDialogProps {
   onAddSource: (source: { name: string; url: string; type: 'M3U' }) => void;
   onRemoveSource: (sourceId: string) => void;
   onAddChannel: (channel: { name: string; url: string; logo: string; group: string; sourceId: string }) => void;
+  customChannels: Array<{ id: string; name: string; url: string; logo: string; group: string; sourceId: string }>;
+  onRemoveChannel: (channelId: string) => void;
 }
 
 export const SourcesDialog = ({ 
@@ -28,7 +30,9 @@ export const SourcesDialog = ({
   customSources, 
   onAddSource, 
   onRemoveSource,
-  onAddChannel 
+  onAddChannel,
+  customChannels,
+  onRemoveChannel 
 }: SourcesDialogProps) => {
   const [showAddM3U, setShowAddM3U] = useState(false);
   const [showAddChannel, setShowAddChannel] = useState(false);
@@ -121,6 +125,49 @@ export const SourcesDialog = ({
                 ))
               )}
             </div>
+
+            {/* Manual channels section */}
+            {customChannels.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-foreground">Chaînes manuelles</h3>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {customChannels.map((channel) => (
+                    <div key={channel.id} className="p-3 border border-border rounded-lg bg-card">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 flex-1">
+                          <img 
+                            src={channel.logo} 
+                            alt={channel.name}
+                            className="w-8 h-8 rounded object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = `https://via.placeholder.com/32x32/0EA5E9/FFFFFF?text=${encodeURIComponent(channel.name.charAt(0))}`;
+                            }}
+                          />
+                          <div className="space-y-1">
+                            <h4 className="font-medium text-card-foreground text-sm">{channel.name}</h4>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs">{channel.group}</Badge>
+                              <span className="text-xs text-muted-foreground truncate max-w-48">
+                                {channel.url}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onRemoveChannel(channel.id)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

@@ -39,6 +39,7 @@ const TV = () => {
     addCustomSource,
     removeCustomSource,
     addCustomChannel,
+    removeCustomChannel,
     refresh
   } = useM3UParser("https://iptv-org.github.io/iptv/languages/fra.m3u");
 
@@ -111,6 +112,17 @@ const TV = () => {
       description: `La chaîne "${channel.name}" a été ajoutée avec succès.`,
     });
     // Refresh channels after adding new channel
+    setTimeout(() => refresh(), 500);
+  };
+
+  const handleRemoveChannel = (channelId: string) => {
+    const channel = m3uChannels.find(ch => ch.id === channelId);
+    removeCustomChannel(channelId);
+    toast({
+      title: "Chaîne supprimée",
+      description: `La chaîne "${channel?.name}" a été supprimée.`,
+    });
+    // Refresh channels after removing channel
     setTimeout(() => refresh(), 500);
   };
 
@@ -274,6 +286,15 @@ const TV = () => {
         onAddSource={handleAddSource}
         onRemoveSource={handleRemoveSource}
         onAddChannel={handleAddChannel}
+        customChannels={m3uChannels.filter(ch => ch.source?.includes('Manual') || ch.source === 'Manual').map(ch => ({
+          id: ch.id,
+          name: ch.name,
+          url: ch.url,
+          logo: ch.logo,
+          group: ch.group,
+          sourceId: ch.id
+        }))}
+        onRemoveChannel={handleRemoveChannel}
       />
     </div>
   );
