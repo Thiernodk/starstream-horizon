@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Maximize, Video } from "lucide-react";
 import Hls from "hls.js";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -22,6 +22,8 @@ const VideoPlayer = ({ src, title, poster, type = "video", className = "" }: Vid
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
+  const [quality, setQuality] = useState("480p");
+  const [showQualityMenu, setShowQualityMenu] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -205,14 +207,47 @@ const VideoPlayer = ({ src, title, poster, type = "video", className = "" }: Vid
               </div>
             </div>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleFullscreen}
-              className="text-white hover:bg-white/20"
-            >
-              <Maximize className="w-5 h-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowQualityMenu(!showQualityMenu)}
+                  className="text-white hover:bg-white/20 flex items-center gap-1"
+                >
+                  <Video className="w-4 h-4" />
+                  <span className="text-xs">{quality}</span>
+                </Button>
+                
+                {showQualityMenu && (
+                  <div className="absolute bottom-full mb-2 right-0 bg-black/90 rounded-lg border border-white/20 py-2 min-w-[120px]">
+                    {["Auto", "1080p", "720p", "480p", "360p"].map((q) => (
+                      <button
+                        key={q}
+                        onClick={() => {
+                          setQuality(q);
+                          setShowQualityMenu(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm text-white hover:bg-white/20 ${
+                          quality === q ? "bg-primary/30" : ""
+                        }`}
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleFullscreen}
+                className="text-white hover:bg-white/20"
+              >
+                <Maximize className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

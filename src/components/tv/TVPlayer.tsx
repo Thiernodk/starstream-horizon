@@ -458,10 +458,26 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
             <Button 
               variant="ghost" 
               className="text-white flex items-center gap-2 px-3 py-2"
+              onClick={() => setShowSettings(true)}
+            >
+              <Video className="w-5 h-5" />
+              {quality}
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="text-white flex items-center gap-2 px-3 py-2"
               onClick={() => setShowEPG(true)}
             >
               <Clock className="w-5 h-5" />
               REVOIR / À SUIVRE
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="text-white flex items-center gap-2 px-3 py-2"
+              onClick={toggleFullscreen}
+            >
+              <Maximize className="w-5 h-5" />
+              PLEIN ÉCRAN
             </Button>
           </div>
         </div>

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useM3UParser } from "@/hooks/useM3UParser";
 import channelsBg from "@/assets/channels-bg.jpg";
 import ChannelListItem from "@/components/tv/ChannelListItem";
-import TVPlayerDemo from "@/components/tv/TVPlayerDemo";
+import TVPlayer from "@/components/tv/TVPlayer";
 import { SourcesDialog } from "@/components/tv/SourcesDialog";
 import { toast } from "@/hooks/use-toast";
 
@@ -123,7 +123,7 @@ const TV = () => {
   // Use TV Player when a channel is selected - Molotov style
   if (showPlayer && selectedChannel) {
     return (
-      <TVPlayerDemo
+      <TVPlayer
         channel={selectedChannel}
         onBack={() => setShowPlayer(false)}
         channels={channels}
