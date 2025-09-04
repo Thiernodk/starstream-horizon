@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TvIcon, Plus } from "lucide-react";
+import { TvIcon, Plus, Upload, X } from "lucide-react";
 
 interface AddChannelDialogProps {
   open: boolean;
@@ -20,9 +20,32 @@ export const AddChannelDialog = ({ open, onOpenChange, onAdd, customSources }: A
   const [group, setGroup] = useState("");
   const [sourceId, setSourceId] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get or create a Manual source
   const manualSource = customSources.find(s => s.type === 'Manual') || { id: 'manual', name: 'Chaînes manuelles', type: 'Manual' };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imageUrl = event.target?.result as string;
+        setUploadedImage(imageUrl);
+        setLogo(imageUrl);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeUploadedImage = () => {
+    setUploadedImage("");
+    setLogo("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +71,10 @@ export const AddChannelDialog = ({ open, onOpenChange, onAdd, customSources }: A
       setLogo("");
       setGroup("");
       setSourceId("");
+      setUploadedImage("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       onOpenChange(false);
     } finally {
       setLoading(false);
@@ -86,14 +113,64 @@ export const AddChannelDialog = ({ open, onOpenChange, onAdd, customSources }: A
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="logo-url">URL du logo (optionnel)</Label>
-            <Input
-              id="logo-url"
-              type="url"
-              placeholder="https://example.com/logo.png"
-              value={logo}
-              onChange={(e) => setLogo(e.target.value)}
-            />
+            <Label>Logo de la chaîne (optionnel)</Label>
+            <div className="space-y-3">
+              {uploadedImage && (
+                <div className="flex items-center gap-3 p-3 border rounded-lg bg-muted/50">
+                  <img 
+                    src={uploadedImage} 
+                    alt="Logo uploadé" 
+                    className="w-12 h-12 object-cover rounded"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">Logo importé</p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={removeUploadedImage}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+              
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex-1"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Importer une image
+                </Button>
+                <div className="flex-1">
+                  <Input
+                    id="logo-url"
+                    type="url"
+                    placeholder="ou URL du logo"
+                    value={uploadedImage ? "" : logo}
+                    onChange={(e) => {
+                      setLogo(e.target.value);
+                      if (e.target.value) {
+                        setUploadedImage("");
+                      }
+                    }}
+                    disabled={!!uploadedImage}
+                  />
+                </div>
+              </div>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="channel-group">Catégorie</Label>
