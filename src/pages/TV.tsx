@@ -20,7 +20,7 @@ type ChannelItem = {
   source?: string;
 };
 
-const TABS = ["Favoris", "Toutes les chaînes", "Sport", "Cinéma"] as const;
+const TABS = ["Favoris", "Toutes les chaînes", "Sport", "Cinéma", "MOOV vs StarTimes N.S"] as const;
 type TabKey = typeof TABS[number];
 
 const TV = () => {
@@ -75,6 +75,9 @@ const TV = () => {
     } else if (activeTab === "Favoris") {
       // No favorites system yet – keep it simple
       list = [];
+    } else if (activeTab === "MOOV vs StarTimes N.S") {
+      // Catégorie spéciale - les chaînes ajoutées ici ne font pas partie des catégories normales
+      list = list.filter(c => c.category === "MOOV vs StarTimes N.S");
     }
 
     if (searchQuery.trim()) {
