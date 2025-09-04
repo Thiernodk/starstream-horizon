@@ -85,8 +85,8 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
         } else if (Hls.isSupported()) {
           hls = new Hls({ 
             enableWorker: true,
-            startLevel: 1, // Start with 480p
-            capLevelToPlayerSize: true,
+            startLevel: getQualityLevel(quality), // Use selected quality
+            capLevelToPlayerSize: false, // Disable auto-sizing to respect manual selection
             maxBufferLength: 10,
             maxMaxBufferLength: 30,
             maxBufferSize: 30 * 1000 * 1000,
@@ -96,7 +96,17 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
           hls.loadSource(source);
           hls.attachMedia(video);
           
+          // Store HLS instance on video element for quality control
+          (video as any).hls = hls;
+          
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            // Set initial quality level after manifest is loaded
+            const targetLevel = getQualityLevel(quality);
+            if (targetLevel !== -1 && hls.levels && hls.levels.length > 0) {
+              const availableLevel = Math.min(targetLevel, hls.levels.length - 1);
+              hls.currentLevel = availableLevel;
+            }
+            
             setIsLoading(false);
             video.play().catch(err => {
               console.warn("Autoplay failed:", err);
@@ -257,6 +267,36 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
     video.currentTime = 0;
   };
 
+  const getQualityLevel = (qualityStr: string) => {
+    switch (qualityStr) {
+      case "auto": return -1;
+      case "1080p": return 3;
+      case "720p": return 2;
+      case "480p": return 1;
+      default: return 1; // Default to 480p
+    }
+  };
+
+  const handleQualityChange = (newQuality: string) => {
+    setQuality(newQuality);
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Get current HLS instance
+    const hls = (video as any).hls;
+    if (hls && hls.levels && hls.levels.length > 0) {
+      const targetLevel = getQualityLevel(newQuality);
+      if (targetLevel === -1) {
+        // Auto quality
+        hls.currentLevel = -1;
+      } else {
+        // Find closest available level
+        const availableLevel = Math.min(targetLevel, hls.levels.length - 1);
+        hls.currentLevel = availableLevel;
+      }
+    }
+  };
+
   const formatTime = (time: number) => {
     if (!isFinite(time)) return "00:00";
     const minutes = Math.floor(time / 60);
@@ -392,7 +432,7 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
           <TVPlayerSettings
             onClose={() => setShowSettings(false)}
             quality={quality}
-            onQualityChange={setQuality}
+            onQualityChange={handleQualityChange}
             audioTrack={audioTrack}
             onAudioTrackChange={setAudioTrack}
             subtitles={subtitles}
