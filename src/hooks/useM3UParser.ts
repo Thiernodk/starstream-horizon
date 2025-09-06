@@ -7,7 +7,6 @@ interface Channel {
   url: string;
   group: string;
   source?: string;
-  epgUrl?: string;
 }
 
 interface CustomSource {

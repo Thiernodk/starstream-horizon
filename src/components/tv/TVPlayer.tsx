@@ -4,13 +4,11 @@ import Hls from "hls.js";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { resolveHlsSource } from "@/utils/stream";
-import { useEPG } from "@/hooks/useEPG";
 import TVPlayerOverlay from "./TVPlayerOverlay";
 import TVPlayerControls from "./TVPlayerControls";
 import TVPlayerSettings from "./TVPlayerSettings";
 import TVZapList from "./TVZapList";
 import TVEPGOverlay from "./TVEPGOverlay";
-import EPGBanner from "./EPGBanner";
 
 interface TVPlayerProps {
   channel: {
@@ -19,7 +17,6 @@ interface TVPlayerProps {
     logo: string;
     category: string;
     url: string;
-    epgUrl?: string;
   };
   onBack: () => void;
   channels: Array<{
@@ -28,7 +25,6 @@ interface TVPlayerProps {
     logo: string;
     category: string;
     url: string;
-    epgUrl?: string;
   }>;
   onChannelChange: (channel: any) => void;
 }
@@ -51,25 +47,16 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
   const [subtitles, setSubtitles] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPiP, setIsPiP] = useState(false);
-  
-  // EPG Hook
-  const { programs, currentProgram: epgCurrentProgram, loading: epgLoading, refreshEPG } = useEPG(channel.id, channel.epgUrl);
 
   let controlsTimeout = useRef<NodeJS.Timeout>();
 
-  // Convert EPG data to legacy format for compatibility
-  const currentProgram = epgCurrentProgram.current ? {
-    title: epgCurrentProgram.current.title,
-    description: epgCurrentProgram.current.description,
-    startTime: epgCurrentProgram.current.start.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
-    endTime: epgCurrentProgram.current.stop.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
-    progress: Math.round(((new Date().getTime() - epgCurrentProgram.current.start.getTime()) / (epgCurrentProgram.current.stop.getTime() - epgCurrentProgram.current.start.getTime())) * 100)
-  } : {
+  // Mock current program data
+  const currentProgram = {
     title: "Programme en cours",
     description: "Description du programme actuellement diffusé sur cette chaîne",
     startTime: "20:00",
     endTime: "22:00",
-    progress: 45
+    progress: 45 // percentage
   };
 
   useEffect(() => {
@@ -470,22 +457,9 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
         {showEPG && (
           <TVEPGOverlay
             channel={channel}
-            programs={programs}
-            loading={epgLoading}
             onClose={() => setShowEPG(false)}
-            onRefresh={refreshEPG}
           />
         )}
-
-        {/* EPG Banner */}
-        <EPGBanner
-          current={epgCurrentProgram.current}
-          next={epgCurrentProgram.next}
-          channelLogo={channel.logo}
-          channelName={channel.name}
-          onOpenFullEPG={() => setShowEPG(true)}
-          showControls={showControls}
-        />
       </div>
 
       {/* Bottom controls with LIVE indicator and channel list button */}
