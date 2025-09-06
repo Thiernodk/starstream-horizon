@@ -1,98 +1,116 @@
-import { useState, useEffect } from "react";
-import { Copy, RefreshCw, Tv, Smartphone, CheckCircle } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Camera, Tv, Smartphone, CheckCircle, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import QRCode from "qrcode";
+import QrScanner from "qr-scanner";
 
 const ConnexionSmartTV = () => {
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
-  const [connectCode, setConnectCode] = useState<string>("");
+  const [inputCode, setInputCode] = useState<string>("");
   const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const scannerRef = useRef<QrScanner | null>(null);
   const { toast } = useToast();
 
-  // Générer un code aléatoire à 4 caractères
-  const generateCode = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let result = "";
-    for (let i = 0; i < 4; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
-  // Générer QR Code et code de connexion
-  const generateConnectionData = async () => {
-    setIsLoading(true);
-    const code = generateCode();
-    setConnectCode(code);
-
-    // URL de connexion avec le code
-    const connectionUrl = `startimes://connect/${code}`;
+  // Démarrer le scanner QR
+  const startQRScanner = async () => {
+    if (!videoRef.current) return;
     
+    setIsScanning(true);
     try {
-      const qrUrl = await QRCode.toDataURL(connectionUrl, {
-        width: 256,
-        margin: 2,
-        color: {
-          dark: "#000000",
-          light: "#FFFFFF"
+      scannerRef.current = new QrScanner(
+        videoRef.current,
+        (result) => {
+          handleQRCodeScanned(result.data);
+        },
+        {
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
         }
-      });
-      setQrCodeUrl(qrUrl);
+      );
+      await scannerRef.current.start();
     } catch (err) {
-      console.error("Erreur génération QR Code:", err);
+      console.error("Erreur scanner QR:", err);
       toast({
         title: "Erreur",
-        description: "Impossible de générer le QR Code",
+        description: "Impossible d'accéder à la caméra",
         variant: "destructive"
       });
-    }
-    setIsLoading(false);
-  };
-
-  // Copier le code dans le presse-papiers
-  const copyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(connectCode);
-      toast({
-        title: "Code copié",
-        description: "Le code a été copié dans le presse-papiers"
-      });
-    } catch (err) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de copier le code",
-        variant: "destructive"
-      });
+      setIsScanning(false);
     }
   };
 
-  // Simuler la connexion (dans un vrai projet, cela serait géré par WebSocket ou polling)
-  useEffect(() => {
-    if (connectCode && !isConnected) {
-      const timer = setTimeout(() => {
-        // Simuler une connexion réussie après 30 secondes pour la démo
-        // Dans un vrai projet, cela viendrait du serveur
-        const random = Math.random();
-        if (random > 0.7) { // 30% de chance de connexion pour la démo
-          setIsConnected(true);
-          toast({
-            title: "Connexion réussie !",
-            description: "Votre Smart TV est maintenant connectée à votre compte"
-          });
-        }
-      }, 30000);
-
-      return () => clearTimeout(timer);
+  // Arrêter le scanner QR
+  const stopQRScanner = () => {
+    if (scannerRef.current) {
+      scannerRef.current.stop();
+      scannerRef.current.destroy();
+      scannerRef.current = null;
     }
-  }, [connectCode, isConnected, toast]);
+    setIsScanning(false);
+  };
 
-  // Générer les données au chargement initial
+  // Traiter le QR code scanné
+  const handleQRCodeScanned = (data: string) => {
+    stopQRScanner();
+    if (data.startsWith('startimes://share/')) {
+      const code = data.replace('startimes://share/', '');
+      connectWithCode(code);
+    } else {
+      toast({
+        title: "QR Code invalide",
+        description: "Ce QR Code ne provient pas de l'application StarTimes Smart TV",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Connecter avec le code saisi
+  const connectWithCode = async (code: string) => {
+    if (!code || code.length !== 4) {
+      toast({
+        title: "Code invalide",
+        description: "Le code doit contenir exactement 4 caractères",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsConnecting(true);
+    try {
+      // Simuler la connexion avec l'app Smart TV
+      // Dans un vrai projet, cela ferait un appel API pour valider le code
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setIsConnected(true);
+      toast({
+        title: "Connexion réussie !",
+        description: "Votre compte a été partagé avec l'application Smart TV"
+      });
+    } catch (err) {
+      toast({
+        title: "Erreur de connexion",
+        description: "Code invalide ou expiré",
+        variant: "destructive"
+      });
+    }
+    setIsConnecting(false);
+  };
+
+  // Gérer la saisie manuelle du code
+  const handleManualConnect = () => {
+    connectWithCode(inputCode);
+  };
+
+  // Nettoyer le scanner au démontage
   useEffect(() => {
-    generateConnectionData();
+    return () => {
+      stopQRScanner();
+    };
   }, []);
 
   return (
@@ -112,82 +130,101 @@ const ConnexionSmartTV = () => {
             <Card className="mb-6 p-6">
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <Smartphone className="w-5 h-5" />
-                Comment connecter votre Smart TV ?
+                Comment partager votre compte ?
               </h2>
               <div className="space-y-3 text-muted-foreground">
                 <p className="flex items-start gap-2">
                   <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0">1</span>
-                  Ouvrez l'application StarTimes N.S sur votre Smart TV
+                  Ouvrez l'application StarTimes N.S sur votre Smart TV (Bolt IA)
                 </p>
                 <p className="flex items-start gap-2">
                   <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0">2</span>
-                  Allez dans "Paramètres" puis "Connexion appareil"
+                  Allez dans "Paramètres" puis "Partage de compte"
                 </p>
                 <p className="flex items-start gap-2">
                   <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0">3</span>
-                  Scannez le QR Code ou saisissez le code à 4 caractères
+                  Générez un QR Code ou copiez le code à 4 caractères
                 </p>
                 <p className="flex items-start gap-2">
                   <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0">4</span>
-                  Votre compte sera automatiquement synchronisé !
+                  Scannez le QR Code ou collez le code ci-dessous
                 </p>
               </div>
             </Card>
 
-            {/* QR Code Section */}
+            {/* Scanner QR Code */}
             <Card className="mb-6 p-6 text-center">
-              <h3 className="text-lg font-semibold mb-4">Scannez le QR Code</h3>
+              <h3 className="text-lg font-semibold mb-4">Scanner le QR Code</h3>
               <div className="flex justify-center mb-4">
-                {qrCodeUrl ? (
-                  <img src={qrCodeUrl} alt="QR Code de connexion" className="border rounded-lg" />
+                {isScanning ? (
+                  <div className="relative">
+                    <video 
+                      ref={videoRef}
+                      className="w-64 h-64 bg-black rounded-lg"
+                      autoPlay
+                      playsInline
+                    />
+                    <div className="absolute inset-0 border-2 border-primary rounded-lg">
+                      <ScanLine className="w-8 h-8 text-primary absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+                    </div>
+                  </div>
                 ) : (
-                  <div className="w-64 h-64 bg-muted rounded-lg flex items-center justify-center">
-                    <RefreshCw className="w-8 h-8 animate-spin" />
+                  <div className="w-64 h-64 bg-muted rounded-lg flex flex-col items-center justify-center">
+                    <Camera className="w-16 h-16 text-muted-foreground mb-4" />
+                    <p className="text-sm text-muted-foreground">Caméra prête</p>
                   </div>
                 )}
               </div>
+              <Button 
+                onClick={isScanning ? stopQRScanner : startQRScanner}
+                className="mb-2"
+              >
+                {isScanning ? "Arrêter le scan" : "Commencer le scan"}
+              </Button>
               <p className="text-sm text-muted-foreground">
-                Utilisez l'appareil photo de votre Smart TV pour scanner ce code
+                Scannez le QR Code généré par l'application Smart TV
               </p>
             </Card>
 
             <Separator className="mb-6" />
 
-            {/* Code Section */}
+            {/* Saisie manuelle du code */}
             <Card className="mb-6 p-6 text-center">
-              <h3 className="text-lg font-semibold mb-4">Ou saisissez le code</h3>
-              <div className="bg-muted rounded-lg p-4 mb-4">
-                <div className="text-3xl font-bold tracking-widest text-primary">
-                  {connectCode || "----"}
-                </div>
+              <h3 className="text-lg font-semibold mb-4">Ou saisissez le code manuellement</h3>
+              <div className="max-w-xs mx-auto mb-4">
+                <Input
+                  placeholder="Code à 4 caractères"
+                  value={inputCode}
+                  onChange={(e) => setInputCode(e.target.value.toUpperCase().slice(0, 4))}
+                  className="text-center text-2xl font-bold tracking-widest"
+                  maxLength={4}
+                />
               </div>
-              <div className="flex gap-3 justify-center">
-                <Button onClick={copyCode} variant="outline" className="flex items-center gap-2">
-                  <Copy className="w-4 h-4" />
-                  Copier le code
-                </Button>
-                <Button 
-                  onClick={generateConnectionData} 
-                  variant="outline" 
-                  disabled={isLoading}
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                  Nouveau code
-                </Button>
-              </div>
+              <Button 
+                onClick={handleManualConnect} 
+                disabled={inputCode.length !== 4 || isConnecting}
+                className="flex items-center gap-2"
+              >
+                {isConnecting ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : null}
+                Se connecter
+              </Button>
+              <p className="text-sm text-muted-foreground mt-2">
+                Copiez le code depuis l'application Smart TV
+              </p>
             </Card>
 
             {/* Status */}
-            <Card className="p-4 bg-yellow-50 border-yellow-200">
+            <Card className="p-4 bg-blue-50 border-blue-200">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
-                <span className="text-yellow-700 font-medium">
-                  En attente de connexion...
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                <span className="text-blue-700 font-medium">
+                  Prêt à recevoir le partage de compte
                 </span>
               </div>
-              <p className="text-sm text-yellow-600 mt-2">
-                Le code expire dans 10 minutes. Assurez-vous que votre Smart TV est connectée à Internet.
+              <p className="text-sm text-blue-600 mt-2">
+                Générez un code depuis votre Smart TV et scannez-le ou saisissez-le ci-dessus.
               </p>
             </Card>
           </>
@@ -195,10 +232,10 @@ const ConnexionSmartTV = () => {
           /* État connecté */
           <Card className="p-6 text-center bg-green-50 border-green-200">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-green-700 mb-2">Connexion réussie !</h2>
+            <h2 className="text-2xl font-bold text-green-700 mb-2">Partage réussi !</h2>
             <p className="text-green-600 mb-6">
-              Votre Smart TV est maintenant connectée à votre compte StarTimes N.S. 
-              Tous vos favoris, historique et paramètres sont synchronisés.
+              Votre compte a été partagé avec l'application Smart TV. 
+              Tous vos favoris, historique et paramètres sont maintenant disponibles.
             </p>
             <div className="space-y-3 text-left bg-white rounded-lg p-4">
               <div className="flex items-center gap-3">
@@ -221,19 +258,19 @@ const ConnexionSmartTV = () => {
             <Button 
               onClick={() => {
                 setIsConnected(false);
-                generateConnectionData();
+                setInputCode("");
               }}
               className="mt-6"
               variant="outline"
             >
-              Connecter un autre appareil
+              Partager avec un autre appareil
             </Button>
           </Card>
         )}
 
         {/* Info supplémentaire */}
         <div className="mt-8 text-center text-sm text-muted-foreground">
-          <p>Besoin d'aide ? Consultez notre guide de connexion Smart TV</p>
+          <p>Besoin d'aide ? Consultez notre guide de partage de compte Smart TV</p>
           <p className="mt-1">ou contactez le support technique au 24/7</p>
         </div>
       </div>
