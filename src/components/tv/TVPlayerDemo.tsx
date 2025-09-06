@@ -369,7 +369,10 @@ const TVPlayerDemo = ({ channel, onBack, channels, onChannelChange }: TVPlayerDe
         {showEPG && (
           <TVEPGOverlay
             channel={channel}
+            programs={[]}
+            loading={false}
             onClose={() => setShowEPG(false)}
+            onRefresh={() => {}}
           />
         )}
       </div>
