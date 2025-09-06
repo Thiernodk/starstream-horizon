@@ -16,6 +16,7 @@ import Support from "./pages/Support";
 import Notifications from "./pages/Notifications";
 import ParentalControl from "./pages/ParentalControl";
 import ConnectedDevices from "./pages/ConnectedDevices";
+import ConnexionSmartTV from "./pages/ConnexionSmartTV";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="notifications" element={<Notifications />} />
             <Route path="parental-control" element={<ParentalControl />} />
             <Route path="connected-devices" element={<ConnectedDevices />} />
+            <Route path="connexion-smart-tv" element={<ConnexionSmartTV />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

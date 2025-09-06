@@ -1,4 +1,4 @@
-import { Settings, User, Heart, Clock, Shield, Headphones, MessageCircle, HelpCircle, CreditCard, Monitor } from "lucide-react";
+import { Settings, User, Heart, Clock, Shield, Headphones, MessageCircle, HelpCircle, CreditCard, Monitor, Tv } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -27,6 +27,7 @@ const Menu = () => {
       title: "Technique",
       items: [
         { icon: Settings, label: "DVB-T2", description: "Réglages antenne TNT" },
+        { icon: Tv, label: "Connexion Smart TV", description: "Connecter votre téléviseur" },
         { icon: Settings, label: "Paramètres", description: "Configuration app" }
       ]
     },
@@ -96,6 +97,9 @@ const Menu = () => {
                           break;
                         case "DVB-T2":
                           navigate("/dvb-t2");
+                          break;
+                        case "Connexion Smart TV":
+                          navigate("/connexion-smart-tv");
                           break;
                         case "Support client":
                           navigate("/support");
