@@ -127,7 +127,7 @@ const TV = () => {
     }
   }, [filtered, selectedChannel]);
 
-  // Use TV Player when a channel is selected - Molotov style
+  // Use TV Player when a channel is selected
   if (showPlayer && selectedChannel) {
     return (
       <TVPlayer

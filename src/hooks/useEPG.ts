@@ -132,20 +132,42 @@ export const useEPG = ({ channelTvgId, epgUrl }: UseEPGProps) => {
     setError(null);
 
     try {
-      if (epgUrl) {
-        // Try to fetch real EPG data
-        const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(epgUrl)}`);
-        if (response.ok) {
-          const data = await response.json();
-          const epgList = parseXMLTV(data.contents);
-          const channelEPG = epgList.find(epg => epg.channelId === channelTvgId);
-          
+      // Build candidate EPG URLs: provided epgUrl first, then fallbacks based on tvgId/country
+      const candidates: string[] = [];
+      if (epgUrl) candidates.push(epgUrl);
+
+      const country = channelTvgId?.split('.')?.pop()?.toLowerCase();
+      const fallbackByCountry: Record<string, string[]> = {
+        fr: [
+          'https://iptv-org.github.io/epg/guides/fr/programme-tv.net.epg.xml',
+          'https://iptv-org.github.io/epg/guides/fr/programmes-tele.com.epg.xml',
+        ],
+      };
+
+      if (country && fallbackByCountry[country]) {
+        candidates.push(...fallbackByCountry[country]);
+      } else {
+        // Generic fallback (France guide has wide coverage and stable hosting)
+        candidates.push('https://iptv-org.github.io/epg/guides/fr/programme-tv.net.epg.xml');
+      }
+
+      const fetchAndParse = async (url: string) => {
+        const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+        if (!response.ok) return null;
+        const data = await response.json();
+        const epgList = parseXMLTV(data.contents);
+        return epgList.find(epg => epg.channelId === channelTvgId) || null;
+      };
+
+      for (const url of candidates) {
+        try {
+          const channelEPG = await fetchAndParse(url);
           if (channelEPG && channelEPG.programs.length > 0) {
             setEPGData(channelEPG.programs);
             setLoading(false);
             return;
           }
-        }
+        } catch {}
       }
 
       // Fallback to mock data
