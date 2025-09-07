@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import UnifiedVideoPlayer from "@/components/UnifiedVideoPlayer";
+import TVPlayer from "@/components/tv/TVPlayer";
 
 const DVBT2 = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -12,16 +13,96 @@ const DVBT2 = () => {
   const [selectedChannel, setSelectedChannel] = useState<any>(null);
   const [showPlayer, setShowPlayer] = useState(false);
 
-  // Sample DVB-T2 channels
+  // Sample DVB-T2 channels with EPG support
   const channels = [
-    { id: "1", name: "TF1 HD", logo: "https://via.placeholder.com/48x48/DC2626/FFFFFF?text=TF1", category: "Généraliste", isLive: true, signal: 95 },
-    { id: "2", name: "France 2 HD", logo: "https://via.placeholder.com/48x48/1D4ED8/FFFFFF?text=F2", category: "Généraliste", isLive: true, signal: 92 },
-    { id: "3", name: "France 3", logo: "https://via.placeholder.com/48x48/0EA5E9/FFFFFF?text=F3", category: "Généraliste", isLive: true, signal: 88 },
-    { id: "4", name: "Canal+", logo: "https://via.placeholder.com/48x48/000000/FFFFFF?text=C+", category: "Cinéma", isLive: true, signal: 90 },
-    { id: "5", name: "France 5", logo: "https://via.placeholder.com/48x48/059669/FFFFFF?text=F5", category: "Documentaires", isLive: true, signal: 85 },
-    { id: "6", name: "M6 HD", logo: "https://via.placeholder.com/48x48/7C3AED/FFFFFF?text=M6", category: "Généraliste", isLive: true, signal: 93 },
-    { id: "7", name: "Arte", logo: "https://via.placeholder.com/48x48/F59E0B/FFFFFF?text=Arte", category: "Culture", isLive: true, signal: 87 },
-    { id: "8", name: "C8", logo: "https://via.placeholder.com/48x48/DC2626/FFFFFF?text=C8", category: "Généraliste", isLive: true, signal: 89 }
+    { 
+      id: "1", 
+      name: "TF1 HD", 
+      logo: "https://via.placeholder.com/48x48/DC2626/FFFFFF?text=TF1", 
+      category: "Généraliste", 
+      isLive: true, 
+      signal: 95,
+      url: "https://static.france24.com/live/F24_FR_HI_HLS/live_tv.m3u8",
+      tvgId: "tf1hd.fr",
+      epgUrl: "https://iptv-org.github.io/epg/guides/fr/programme-tv.net.epg.xml"
+    },
+    { 
+      id: "2", 
+      name: "France 2 HD", 
+      logo: "https://via.placeholder.com/48x48/1D4ED8/FFFFFF?text=F2", 
+      category: "Généraliste", 
+      isLive: true, 
+      signal: 92,
+      url: "https://static.france24.com/live/F24_FR_HI_HLS/live_tv.m3u8",
+      tvgId: "france2hd.fr",
+      epgUrl: "https://iptv-org.github.io/epg/guides/fr/programme-tv.net.epg.xml"
+    },
+    { 
+      id: "3", 
+      name: "France 3", 
+      logo: "https://via.placeholder.com/48x48/0EA5E9/FFFFFF?text=F3", 
+      category: "Généraliste", 
+      isLive: true, 
+      signal: 88,
+      url: "https://static.france24.com/live/F24_FR_HI_HLS/live_tv.m3u8",
+      tvgId: "france3.fr",
+      epgUrl: "https://iptv-org.github.io/epg/guides/fr/programme-tv.net.epg.xml"
+    },
+    { 
+      id: "4", 
+      name: "Canal+", 
+      logo: "https://via.placeholder.com/48x48/000000/FFFFFF?text=C+", 
+      category: "Cinéma", 
+      isLive: true, 
+      signal: 90,
+      url: "https://static.france24.com/live/F24_FR_HI_HLS/live_tv.m3u8",
+      tvgId: "canalplus.fr",
+      epgUrl: "https://iptv-org.github.io/epg/guides/fr/programme-tv.net.epg.xml"
+    },
+    { 
+      id: "5", 
+      name: "France 5", 
+      logo: "https://via.placeholder.com/48x48/059669/FFFFFF?text=F5", 
+      category: "Documentaires", 
+      isLive: true, 
+      signal: 85,
+      url: "https://static.france24.com/live/F24_FR_HI_HLS/live_tv.m3u8",
+      tvgId: "france5.fr",
+      epgUrl: "https://iptv-org.github.io/epg/guides/fr/programme-tv.net.epg.xml"
+    },
+    { 
+      id: "6", 
+      name: "M6 HD", 
+      logo: "https://via.placeholder.com/48x48/7C3AED/FFFFFF?text=M6", 
+      category: "Généraliste", 
+      isLive: true, 
+      signal: 93,
+      url: "https://static.france24.com/live/F24_FR_HI_HLS/live_tv.m3u8",
+      tvgId: "m6hd.fr",
+      epgUrl: "https://iptv-org.github.io/epg/guides/fr/programme-tv.net.epg.xml"
+    },
+    { 
+      id: "7", 
+      name: "Arte", 
+      logo: "https://via.placeholder.com/48x48/F59E0B/FFFFFF?text=Arte", 
+      category: "Culture", 
+      isLive: true, 
+      signal: 87,
+      url: "https://static.france24.com/live/F24_FR_HI_HLS/live_tv.m3u8",
+      tvgId: "arte.fr",
+      epgUrl: "https://iptv-org.github.io/epg/guides/fr/programme-tv.net.epg.xml"
+    },
+    { 
+      id: "8", 
+      name: "C8", 
+      logo: "https://via.placeholder.com/48x48/DC2626/FFFFFF?text=C8", 
+      category: "Généraliste", 
+      isLive: true, 
+      signal: 89,
+      url: "https://static.france24.com/live/F24_FR_HI_HLS/live_tv.m3u8",
+      tvgId: "c8.fr",
+      epgUrl: "https://iptv-org.github.io/epg/guides/fr/programme-tv.net.epg.xml"
+    }
   ];
 
   const categories = ["Toutes", "Généraliste", "Cinéma", "Documentaires", "Culture"];
@@ -41,17 +122,27 @@ const DVBT2 = () => {
 
   if (showPlayer && selectedChannel) {
     return (
-      <UnifiedVideoPlayer
-        src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-        title={selectedChannel.name}
-        description={`Chaîne TNT ${selectedChannel.category}`}
-        type="video"
-        onBack={() => setShowPlayer(false)}
-        metadata={{
-          genre: selectedChannel.category,
-          year: "HD",
-          duration: "Direct"
+      <TVPlayer
+        channel={{
+          id: selectedChannel.id,
+          name: selectedChannel.name,
+          logo: selectedChannel.logo,
+          category: selectedChannel.category,
+          url: selectedChannel.url,
+          tvgId: selectedChannel.tvgId,
+          epgUrl: selectedChannel.epgUrl
         }}
+        onBack={() => setShowPlayer(false)}
+        channels={channels.map(ch => ({
+          id: ch.id,
+          name: ch.name,
+          logo: ch.logo,
+          category: ch.category,
+          url: ch.url,
+          tvgId: ch.tvgId,
+          epgUrl: ch.epgUrl
+        }))}
+        onChannelChange={(ch) => setSelectedChannel(ch)}
       />
     );
   }
