@@ -9,7 +9,6 @@ import TVPlayerControls from "./TVPlayerControls";
 import TVPlayerSettings from "./TVPlayerSettings";
 import TVZapList from "./TVZapList";
 import TVEPGOverlay from "./TVEPGOverlay";
-import EPGBanner from "./EPGBanner";
 
 interface TVPlayerProps {
   channel: {
@@ -18,8 +17,6 @@ interface TVPlayerProps {
     logo: string;
     category: string;
     url: string;
-    tvgId?: string;
-    epgUrl?: string;
   };
   onBack: () => void;
   channels: Array<{
@@ -28,8 +25,6 @@ interface TVPlayerProps {
     logo: string;
     category: string;
     url: string;
-    tvgId?: string;
-    epgUrl?: string;
   }>;
   onChannelChange: (channel: any) => void;
 }
@@ -465,15 +460,6 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
             onClose={() => setShowEPG(false)}
           />
         )}
-
-        {/* EPG Banner - shows in all modes */}
-        <EPGBanner
-          channelTvgId={channel.tvgId}
-          epgUrl={channel.epgUrl}
-          channelLogo={channel.logo}
-          channelName={channel.name}
-          showControls={showControls}
-        />
       </div>
 
       {/* Bottom controls with LIVE indicator and channel list button */}

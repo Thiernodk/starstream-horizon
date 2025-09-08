@@ -18,8 +18,6 @@ type ChannelItem = {
   isLive: boolean;
   url: string;
   source?: string;
-  tvgId?: string;
-  epgUrl?: string;
 };
 
 const TABS = ["Favoris", "Toutes les chaînes", "Sport", "Cinéma", "MOOV vs StarTimes N.S"] as const;
@@ -52,9 +50,7 @@ const TV = () => {
       category: ch.group || "Général",
       isLive: true,
       url: ch.url,
-      source: ch.source || "Default",
-      tvgId: ch.tvgId,
-      epgUrl: ch.epgUrl
+      source: ch.source || "Default"
     }));
   }, [m3uChannels]);
 
@@ -127,7 +123,7 @@ const TV = () => {
     }
   }, [filtered, selectedChannel]);
 
-  // Use TV Player when a channel is selected
+  // Use TV Player when a channel is selected - Molotov style
   if (showPlayer && selectedChannel) {
     return (
       <TVPlayer
