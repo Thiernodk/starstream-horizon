@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import UnifiedVideoPlayer from "@/components/UnifiedVideoPlayer";
+import EnhancedVideoPlayer from "@/components/EnhancedVideoPlayer";
 
 const VOD = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -102,19 +102,17 @@ const VOD = () => {
 
   if (showPlayer && selectedContent) {
     return (
-      <UnifiedVideoPlayer
+      <EnhancedVideoPlayer
         src={selectedContent.videoUrl}
         title={selectedContent.title}
-        description={selectedContent.description}
         poster={selectedContent.thumbnail}
-        type="video"
         onBack={() => setShowPlayer(false)}
         metadata={{
-          genre: selectedContent.genre,
-          year: selectedContent.year,
-          duration: selectedContent.duration,
-          rating: selectedContent.rating
+          category: selectedContent.genre,
+          description: selectedContent.description,
         }}
+        autoplay={false}
+        controls={true}
       />
     );
   }
