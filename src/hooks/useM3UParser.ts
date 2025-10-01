@@ -7,6 +7,8 @@ interface Channel {
   url: string;
   group: string;
   source?: string;
+  tvgId?: string;
+  epgUrl?: string;
 }
 
 interface CustomSource {
@@ -74,15 +76,25 @@ export const useM3UParser = (defaultM3uUrl: string) => {
         const lines = m3uContent.split('\n');
         const parsedChannels: Channel[] = [];
         let currentChannel: Partial<Channel> = {};
+        let globalEpgUrl: string | undefined;
 
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i].trim();
 
+          // Parse global EPG URL from #EXTM3U line
+          if (line.startsWith('#EXTM3U') && line.includes('url-tvg=')) {
+            const epgMatch = line.match(/url-tvg="([^"]+)"/);
+            if (epgMatch) {
+              globalEpgUrl = epgMatch[1];
+            }
+          }
+
           if (line.startsWith('#EXTINF:')) {
-            // Parse channel info
+            // Parse channel info including tvg-id
             const nameMatch = line.match(/,(.+)$/);
             const logoMatch = line.match(/tvg-logo="([^"]+)"/);
             const groupMatch = line.match(/group-title="([^"]+)"/);
+            const tvgIdMatch = line.match(/tvg-id="([^"]+)"/);
 
             currentChannel = {
               id: `${sourceName}-${parsedChannels.length + 1}`,
@@ -90,6 +102,8 @@ export const useM3UParser = (defaultM3uUrl: string) => {
               logo: logoMatch ? logoMatch[1] : `https://via.placeholder.com/48x48/0EA5E9/FFFFFF?text=${encodeURIComponent(nameMatch ? nameMatch[1].charAt(0) : 'TV')}`,
               group: groupMatch ? groupMatch[1] || 'Général' : 'Général',
               source: sourceName,
+              tvgId: tvgIdMatch ? tvgIdMatch[1] : undefined,
+              epgUrl: globalEpgUrl,
             };
           } else if (line && !line.startsWith('#') && (currentChannel as any).name) {
             // This is the stream URL

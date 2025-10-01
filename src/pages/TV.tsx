@@ -18,6 +18,8 @@ type ChannelItem = {
   isLive: boolean;
   url: string;
   source?: string;
+  tvgId?: string;
+  epgUrl?: string;
 };
 
 const TABS = ["Favoris", "Toutes les chaînes", "Sport", "Cinéma", "MOOV vs StarTimes N.S"] as const;
@@ -50,7 +52,9 @@ const TV = () => {
       category: ch.group || "Général",
       isLive: true,
       url: ch.url,
-      source: ch.source || "Default"
+      source: ch.source || "Default",
+      tvgId: ch.tvgId,
+      epgUrl: ch.epgUrl
     }));
   }, [m3uChannels]);
 
