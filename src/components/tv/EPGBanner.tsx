@@ -15,7 +15,7 @@ const EPGBanner = ({ channelTvgId, epgUrl, channelLogo, channelName, showControl
   const currentProgram = getCurrentProgram();
   const nextProgram = getNextProgram();
 
-  if (!showControls || loading) return null;
+  if (loading) return null;
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('fr-FR', { 
