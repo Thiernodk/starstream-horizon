@@ -1,4 +1,4 @@
-import EnhancedVideoPlayer from "@/components/EnhancedVideoPlayer";
+import SmartTVPlayer from "@/components/SmartTVPlayer";
 
 interface DVBVideoPlayerProps {
   channel: {
@@ -16,15 +16,15 @@ const DVBVideoPlayer = ({ channel, onBack }: DVBVideoPlayerProps) => {
   const streamUrl = `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`;
 
   return (
-    <EnhancedVideoPlayer
+    <SmartTVPlayer
       src={streamUrl}
-      title="Programme en cours"
+      title={channel.name}
       onBack={onBack}
       metadata={{
         channelName: channel.name,
         channelLogo: channel.logo,
         category: `TNT • ${channel.category}`,
-        description: `Programme actuellement diffusé sur ${channel.name}. Profitez de la qualité TNT HD directement sur votre appareil.`,
+        description: `Programme TNT HD`,
       }}
       autoplay={false}
       controls={true}

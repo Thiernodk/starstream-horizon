@@ -1,4 +1,4 @@
-import EnhancedVideoPlayer from "@/components/EnhancedVideoPlayer";
+import SmartTVPlayer from "@/components/SmartTVPlayer";
 
 interface TVPlayerProps {
   channel: {
@@ -25,17 +25,15 @@ interface TVPlayerProps {
 
 const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps) => {
   return (
-    <EnhancedVideoPlayer
+    <SmartTVPlayer
       src={channel.url}
-      title="Programme en cours"
+      title={channel.name}
       onBack={onBack}
       metadata={{
         channelName: channel.name,
         channelLogo: channel.logo,
         category: channel.category,
-        tvgId: channel.tvgId,
-        epgUrl: channel.epgUrl,
-        description: "Programme actuellement diffusé sur cette chaîne",
+        description: "Programme en direct",
       }}
       autoplay={true}
       controls={true}

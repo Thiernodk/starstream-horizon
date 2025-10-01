@@ -92,5 +92,20 @@
 
   body {
     @apply bg-background text-foreground;
+    /* Smart TV optimizations */
+    overflow-x: hidden;
+    font-size: 16px;
+  }
+
+  /* Smart TV focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+
+  /* Optimize for large screens */
+  @media (min-width: 1920px) {
+    body {
+      font-size: 18px;
+    }
   }
 }

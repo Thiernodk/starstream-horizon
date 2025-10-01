@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, Tv as TvIcon, Settings, Plus } from "lucide-react";
+import { Search, Tv as TvIcon, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useM3UParser } from "@/hooks/useM3UParser";
-import channelsBg from "@/assets/channels-bg.jpg";
-import ChannelListItem from "@/components/tv/ChannelListItem";
 import TVPlayer from "@/components/tv/TVPlayer";
 import { SourcesDialog } from "@/components/tv/SourcesDialog";
 import { toast } from "@/hooks/use-toast";
@@ -140,26 +138,27 @@ const TV = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top header with background and title */}
-      <div className="relative h-24 overflow-hidden">
-        <img src={channelsBg} alt="Channels background" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-overlay" />
-        <div className="absolute inset-0 flex items-center px-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-wide">
-            EN DIRECT
-          </h1>
-        </div>
+    <div className="min-h-screen bg-background px-8 py-6">
+      {/* Top section with title */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-foreground mb-2">
+          TV en Direct
+        </h1>
+        <p className="text-muted-foreground text-lg">
+          Regardez vos chaînes préférées en direct
+        </p>
       </div>
 
-      <div className="px-4 py-6 space-y-6">
-        {/* Tabs like in the screenshot */}
-        <div className="flex gap-6 overflow-x-auto pb-1">
+      <div className="space-y-8">
+        {/* Tabs */}
+        <div className="flex gap-8 border-b border-border">
           {TABS.map(tab => (
             <button
               key={tab}
-              className={`pb-2 text-sm md:text-base whitespace-nowrap ${
-                activeTab === tab ? "text-primary font-medium border-b-2 border-primary" : "text-muted-foreground hover:text-foreground"
+              className={`pb-4 text-lg font-medium whitespace-nowrap transition-colors ${
+                activeTab === tab 
+                  ? "text-primary border-b-2 border-primary" 
+                  : "text-muted-foreground hover:text-foreground"
               }`}
               onClick={() => setActiveTab(tab)}
             >
@@ -169,104 +168,99 @@ const TV = () => {
         </div>
 
         {/* Controls row */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex gap-4 items-center">
           {/* Search */}
-          <div className="relative flex-1 max-w-xl">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <div className="relative flex-1 max-w-2xl">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
             <Input
               placeholder="Rechercher une chaîne..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-12 h-12 text-base"
             />
           </div>
 
           {/* Source filter */}
-          <div className="flex gap-2">
-            <Select value={selectedSource} onValueChange={setSelectedSource}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Toutes les sources" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les sources</SelectItem>
-                {availableSources.filter(s => s !== 'all').map(source => (
-                  <SelectItem key={source} value={source}>
-                    {source}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <Select value={selectedSource} onValueChange={setSelectedSource}>
+            <SelectTrigger className="w-[220px] h-12">
+              <SelectValue placeholder="Toutes les sources" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les sources</SelectItem>
+              {availableSources.filter(s => s !== 'all').map(source => (
+                <SelectItem key={source} value={source}>
+                  {source}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-            <Button
-              variant="outline"
-              onClick={() => setShowSourcesDialog(true)}
-              className="flex items-center gap-2"
-            >
-              <Settings className="w-4 h-4" />
-              Sources
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            onClick={() => setShowSourcesDialog(true)}
+            className="flex items-center gap-2 h-12 px-6"
+          >
+            <Settings className="w-5 h-5" />
+            Sources
+          </Button>
         </div>
 
         {/* Content */}
         {loading && (
-          <div className="text-center py-8">
-            <p className="text-foreground">Chargement des chaînes...</p>
+          <div className="text-center py-16">
+            <p className="text-foreground text-lg">Chargement des chaînes...</p>
           </div>
         )}
 
         {error && (
-          <div className="bg-destructive/20 text-destructive-foreground p-4 rounded-lg">
-            <p>Erreur: {error}</p>
+          <div className="bg-destructive/20 text-destructive-foreground p-6 rounded-lg">
+            <p className="text-lg">Erreur: {error}</p>
           </div>
         )}
 
-        {/* Section title */}
-        <div className="pt-4">
-          <h2 className="text-foreground text-xl font-medium mb-6">
-            {activeTab}
-          </h2>
-        </div>
-
-        {/* Channels grid view - like the image */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {/* Channels grid - larger for Smart TV */}
+        <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-6">
           {filtered.map((ch) => (
             <div 
               key={ch.id}
-              className="group cursor-pointer"
+              className="group cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl transition-all duration-200"
               onClick={() => {
                 setSelectedChannel(ch);
                 setShowPlayer(true);
               }}
+              tabIndex={0}
             >
-              <div className="aspect-square bg-card border border-border rounded-lg p-4 hover:bg-accent transition-colors duration-200 flex items-center justify-center">
-                <div className="w-full h-full flex items-center justify-center">
-                  <img
-                    src={ch.logo}
-                    alt={ch.name}
-                    className="max-w-full max-h-full object-contain filter brightness-90 group-hover:brightness-100 transition-all duration-200"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://via.placeholder.com/120x80/1f2937/ffffff?text=${encodeURIComponent(
-                        ch.name.slice(0, 3).toUpperCase()
-                      )}`;
-                    }}
-                  />
-                </div>
+              <div className="aspect-square bg-card border-2 border-border rounded-xl p-6 hover:border-primary hover:shadow-glow hover:scale-105 transition-all duration-200 flex items-center justify-center">
+                <img
+                  src={ch.logo}
+                  alt={ch.name}
+                  className="max-w-full max-h-full object-contain filter brightness-90 group-hover:brightness-110 transition-all duration-200"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `https://via.placeholder.com/150x100/1f2937/ffffff?text=${encodeURIComponent(
+                      ch.name.slice(0, 3).toUpperCase()
+                    )}`;
+                  }}
+                />
               </div>
-              <div className="mt-2 text-center">
-                <p className="text-sm text-foreground font-medium truncate">
+              <div className="mt-3 text-center">
+                <p className="text-base text-foreground font-semibold truncate">
                   {ch.name}
                 </p>
+                {ch.category && (
+                  <p className="text-sm text-muted-foreground truncate mt-1">
+                    {ch.category}
+                  </p>
+                )}
               </div>
             </div>
           ))}
 
-          {filtered.length === 0 && (
-            <div className="col-span-full text-center py-12">
+          {filtered.length === 0 && !loading && (
+            <div className="col-span-full text-center py-20">
               <div className="text-muted-foreground">
-                <TvIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium mb-2">Aucune chaîne trouvée</p>
-                <p className="text-sm">Essayez de modifier votre recherche ou de changer de catégorie</p>
+                <TvIcon className="w-20 h-20 mx-auto mb-6 opacity-50" />
+                <p className="text-2xl font-medium mb-3">Aucune chaîne trouvée</p>
+                <p className="text-lg">Essayez de modifier votre recherche ou de changer de catégorie</p>
               </div>
             </div>
           )}
