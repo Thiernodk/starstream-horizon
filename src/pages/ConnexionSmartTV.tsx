@@ -57,13 +57,13 @@ const ConnexionSmartTV = () => {
   // Traiter le QR code scanné
   const handleQRCodeScanned = (data: string) => {
     stopQRScanner();
-    if (data.startsWith('startimes://share/')) {
-      const code = data.replace('startimes://share/', '');
+    if (data.startsWith('nsstream://share/')) {
+      const code = data.replace('nsstream://share/', '');
       connectWithCode(code);
     } else {
       toast({
         title: "QR Code invalide",
-        description: "Ce QR Code ne provient pas de l'application StarTimes Smart TV",
+        description: "Ce QR Code ne provient pas de l'application N.S Stream Smart TV",
         variant: "destructive"
       });
     }
@@ -135,7 +135,7 @@ const ConnexionSmartTV = () => {
               <div className="space-y-3 text-muted-foreground">
                 <p className="flex items-start gap-2">
                   <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0">1</span>
-                  Ouvrez l'application StarTimes N.S sur votre Smart TV (Bolt IA)
+                  Ouvrez l'application N.S Stream sur votre Smart TV (Bolt IA)
                 </p>
                 <p className="flex items-start gap-2">
                   <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0">2</span>

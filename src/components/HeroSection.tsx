@@ -8,7 +8,7 @@ const HeroSection = () => {
       <div className="absolute inset-0">
         <img
           src={heroBanner}
-          alt="StarTimes N.S - Streaming Platform"
+          alt="N.S Stream - Streaming Platform"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-overlay" />
@@ -17,7 +17,7 @@ const HeroSection = () => {
       <div className="relative z-10 flex flex-col justify-end h-full p-6 text-white">
         <div className="max-w-lg">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
-            Bienvenue sur <span className="text-primary">StarTimes N.S</span>
+            Bienvenue sur <span className="text-primary">N.S Stream</span>
           </h1>
           <p className="text-lg text-white/90 mb-6">
             Découvrez des milliers de chaînes TV, radios et contenus VOD en streaming HD

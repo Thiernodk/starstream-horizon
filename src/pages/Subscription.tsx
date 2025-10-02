@@ -58,7 +58,7 @@ const Subscription = () => {
     { id: "mobile", name: "Mobile Money", icon: "📱", available: true },
     { id: "card", name: "Carte bancaire", icon: "💳", available: true },
     { id: "paypal", name: "PayPal", icon: "🔵", available: true },
-    { id: "startimes", name: "Décodeur StarTimes", icon: "📺", available: true, note: "Max 2 comptes" }
+    { id: "nsstream", name: "Décodeur N.S Stream", icon: "📺", available: true, note: "Max 2 comptes" }
   ];
 
   return (

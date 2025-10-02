@@ -41,7 +41,7 @@ const SmartTVNavigation = () => {
             <Tv className="w-6 h-6 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            StarTimes N.S
+            N.S Stream
           </h1>
         </div>
 

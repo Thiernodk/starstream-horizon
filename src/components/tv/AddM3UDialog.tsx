@@ -45,7 +45,7 @@ export const AddM3UDialog = ({ open, onOpenChange, onAdd }: AddM3UDialogProps) =
             <Label htmlFor="source-name">Nom de la source</Label>
             <Input
               id="source-name"
-              placeholder="ex: StarTimes Sports"
+              placeholder="ex: N.S Sports"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required

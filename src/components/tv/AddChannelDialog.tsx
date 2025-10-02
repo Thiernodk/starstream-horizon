@@ -95,7 +95,7 @@ export const AddChannelDialog = ({ open, onOpenChange, onAdd, customSources }: A
             <Label htmlFor="channel-name">Nom de la chaîne</Label>
             <Input
               id="channel-name"
-              placeholder="ex: StarTimes Sports 1"
+              placeholder="ex: N.S Sports 1"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required

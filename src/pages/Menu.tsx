@@ -137,8 +137,8 @@ const Menu = () => {
 
         {/* Version info */}
         <div className="mt-8 text-center text-sm text-muted-foreground">
-          <p>StarTimes N.S v1.0.0</p>
-          <p>© 2024 StarTimes. Tous droits réservés.</p>
+          <p>N.S Stream v1.0.0</p>
+          <p>© 2024 N.S Stream. Tous droits réservés.</p>
         </div>
       </div>
     </div>

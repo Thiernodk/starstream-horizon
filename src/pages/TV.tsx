@@ -20,7 +20,7 @@ type ChannelItem = {
   epgUrl?: string;
 };
 
-const TABS = ["Favoris", "Toutes les chaînes", "Sport", "Cinéma", "MOOV vs StarTimes N.S"] as const;
+const TABS = ["Favoris", "Toutes les chaînes", "Sport", "Cinéma", "MOOV vs N.S Stream"] as const;
 type TabKey = typeof TABS[number];
 
 const TV = () => {
@@ -77,9 +77,9 @@ const TV = () => {
     } else if (activeTab === "Favoris") {
       // No favorites system yet – keep it simple
       list = [];
-    } else if (activeTab === "MOOV vs StarTimes N.S") {
+    } else if (activeTab === "MOOV vs N.S Stream") {
       // Catégorie spéciale - les chaînes ajoutées ici ne font pas partie des catégories normales
-      list = list.filter(c => c.category === "MOOV vs StarTimes N.S");
+      list = list.filter(c => c.category === "MOOV vs N.S Stream");
     }
 
     if (searchQuery.trim()) {
