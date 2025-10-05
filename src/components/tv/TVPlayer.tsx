@@ -1,4 +1,4 @@
-import SmartTVPlayer from "@/components/SmartTVPlayer";
+import ClapprPlayer from "@/components/ClapprPlayer";
 
 interface TVPlayerProps {
   channel: {
@@ -25,7 +25,7 @@ interface TVPlayerProps {
 
 const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps) => {
   return (
-    <SmartTVPlayer
+    <ClapprPlayer
       src={channel.url}
       title={channel.name}
       onBack={onBack}

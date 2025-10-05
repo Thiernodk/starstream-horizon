@@ -1,4 +1,4 @@
-import SmartTVPlayer from "@/components/SmartTVPlayer";
+import ClapprPlayer from "@/components/ClapprPlayer";
 
 interface DVBVideoPlayerProps {
   channel: {
@@ -16,7 +16,7 @@ const DVBVideoPlayer = ({ channel, onBack }: DVBVideoPlayerProps) => {
   const streamUrl = `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`;
 
   return (
-    <SmartTVPlayer
+    <ClapprPlayer
       src={streamUrl}
       title={channel.name}
       onBack={onBack}
