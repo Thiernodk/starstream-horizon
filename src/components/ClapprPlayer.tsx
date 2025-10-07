@@ -43,6 +43,7 @@ const ClapprPlayer = ({
         
         // Resolve HLS source if needed
         const resolvedSrc = await resolveHlsSource(src);
+        console.log('Initializing Clappr player with:', resolvedSrc);
 
         // Destroy existing player
         if (clapprInstance.current) {
@@ -70,10 +71,15 @@ const ClapprPlayer = ({
             enableWorker: true,
             lowLatencyMode: true,
             backBufferLength: 90,
+            xhrSetup: (xhr: any, url: string) => {
+              // Add CORS headers
+              xhr.withCredentials = false;
+            },
           },
         });
 
         clapprInstance.current.on(Clappr.Events.PLAYER_READY, () => {
+          console.log('Clappr player ready');
           setIsLoading(false);
         });
 
@@ -81,6 +87,11 @@ const ClapprPlayer = ({
           console.error("Clappr player error:", error);
           setIsLoading(false);
         });
+
+        clapprInstance.current.on(Clappr.Events.PLAYER_PLAY, () => {
+          console.log('Playback started');
+        });
+
       } catch (error) {
         console.error("Failed to initialize player:", error);
         setIsLoading(false);
