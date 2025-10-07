@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import SmartTVPlayer from "@/components/SmartTVPlayer";
+import ClapprPlayer from "@/components/ClapprPlayer";
 
 const VOD = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -102,7 +102,7 @@ const VOD = () => {
 
   if (showPlayer && selectedContent) {
     return (
-      <SmartTVPlayer
+      <ClapprPlayer
         src={selectedContent.videoUrl}
         title={selectedContent.title}
         poster={selectedContent.thumbnail}
