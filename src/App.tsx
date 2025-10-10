@@ -17,6 +17,8 @@ import Notifications from "./pages/Notifications";
 import ParentalControl from "./pages/ParentalControl";
 import ConnectedDevices from "./pages/ConnectedDevices";
 import ConnexionSmartTV from "./pages/ConnexionSmartTV";
+import Auth from "./pages/Auth";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="/" element={<Layout />}>
             <Route index element={<Index />} />
             <Route path="tv" element={<TV />} />
