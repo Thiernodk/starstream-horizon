@@ -1,12 +1,21 @@
-import { Home, Tv, Radio, Video, Menu, Settings } from "lucide-react";
+import { Home, Tv, Radio, Video, Menu, Settings, Shield, User, LogOut } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const SmartTVNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const { user, isAdmin, signOut } = useAuth();
 
   const navigationItems = [
     { icon: Home, path: "/", label: "Accueil" },
@@ -69,10 +78,50 @@ const SmartTVNavigation = () => {
             );
           })}
           
+          {/* Admin Button */}
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin")}
+              className="ml-4 p-3 rounded-lg hover:bg-accent/50 transition-colors text-primary hover:text-primary shadow-glow"
+              title="Administration"
+            >
+              <Shield className="w-5 h-5" />
+            </button>
+          )}
+          
+          {/* User Menu */}
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="ml-2 p-3 rounded-lg hover:bg-accent/50 transition-colors text-foreground/70 hover:text-foreground">
+                  <User className="w-5 h-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate("/profile")}>
+                  <User className="w-4 h-4 mr-2" />
+                  Profil
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Déconnexion
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <button
+              onClick={() => navigate("/auth")}
+              className="ml-2 p-3 rounded-lg hover:bg-accent/50 transition-colors text-foreground/70 hover:text-foreground"
+            >
+              <User className="w-5 h-5" />
+            </button>
+          )}
+          
           {/* Settings */}
           <button
             onClick={() => navigate("/menu")}
-            className="ml-4 p-3 rounded-lg hover:bg-accent/50 transition-colors text-foreground/70 hover:text-foreground"
+            className="ml-2 p-3 rounded-lg hover:bg-accent/50 transition-colors text-foreground/70 hover:text-foreground"
           >
             <Settings className="w-5 h-5" />
           </button>
