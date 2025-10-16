@@ -6,7 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { z } from "zod";
 import logo from "@/assets/logo.png";
+
+const loginSchema = z.object({
+  email: z.string().email("Email invalide").max(255, "Email trop long"),
+  password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
+});
+
+const signupSchema = z.object({
+  email: z.string().email("Email invalide").max(255, "Email trop long"),
+  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+  fullName: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(100, "Nom trop long").optional(),
+});
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -30,16 +43,47 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    await signIn(loginEmail, loginPassword);
-    setIsLoading(false);
+    
+    try {
+      const validated = loginSchema.parse({
+        email: loginEmail,
+        password: loginPassword,
+      });
+      
+      setIsLoading(true);
+      await signIn(validated.email, validated.password);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        error.errors.forEach((err) => {
+          toast.error(err.message);
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    await signUp(signupEmail, signupPassword, signupFullName);
-    setIsLoading(false);
+    
+    try {
+      const validated = signupSchema.parse({
+        email: signupEmail,
+        password: signupPassword,
+        fullName: signupFullName || undefined,
+      });
+      
+      setIsLoading(true);
+      await signUp(validated.email, validated.password, validated.fullName);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        error.errors.forEach((err) => {
+          toast.error(err.message);
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -123,7 +167,9 @@ const Auth = () => {
                     value={signupPassword}
                     onChange={(e) => setSignupPassword(e.target.value)}
                     required
+                    minLength={8}
                   />
+                  <p className="text-xs text-muted-foreground">Minimum 8 caractères</p>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Création..." : "Créer un compte"}
