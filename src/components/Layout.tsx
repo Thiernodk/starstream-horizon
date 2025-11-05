@@ -6,6 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const Layout = () => {
   const { user, loading } = useAuth();
+  const isMobile = useIsMobile();
 
   if (loading) {
     return (
@@ -21,8 +22,6 @@ const Layout = () => {
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-
-  const isMobile = useIsMobile();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
