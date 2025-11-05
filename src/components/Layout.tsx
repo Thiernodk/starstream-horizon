@@ -1,6 +1,8 @@
 import { Outlet, Navigate } from "react-router-dom";
-import SmartTVNavigation from "./SmartTVNavigation";
+import Header from "./Header";
+import BottomNavigation from "./BottomNavigation";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Layout = () => {
   const { user, loading } = useAuth();
@@ -20,12 +22,15 @@ const Layout = () => {
     return <Navigate to="/auth" replace />;
   }
 
+  const isMobile = useIsMobile();
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SmartTVNavigation />
-      <main className="pt-20">
+      <Header />
+      <main className={isMobile ? "pb-20" : "pb-4"}>
         <Outlet />
       </main>
+      {isMobile && <BottomNavigation />}
     </div>
   );
 };
