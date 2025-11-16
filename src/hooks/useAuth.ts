@@ -19,9 +19,7 @@ export const useAuth = () => {
         
         // Check admin status after state is set
         if (session?.user) {
-          setTimeout(() => {
-            checkAdminStatus(session.user.id);
-          }, 0);
+          checkAdminStatus(session.user.id);
         } else {
           setIsAdmin(false);
         }
@@ -42,7 +40,7 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAdminStatus = async (userId: string, retryCount = 0) => {
+  const checkAdminStatus = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('user_roles')
@@ -57,16 +55,7 @@ export const useAuth = () => {
         return;
       }
 
-      if (data) {
-        setIsAdmin(true);
-      } else if (retryCount < 3) {
-        // Retry après un délai pour laisser le trigger s'exécuter
-        setTimeout(() => {
-          checkAdminStatus(userId, retryCount + 1);
-        }, 500);
-      } else {
-        setIsAdmin(false);
-      }
+      setIsAdmin(!!data);
     } catch (error) {
       console.error('Error checking admin status:', error);
       setIsAdmin(false);

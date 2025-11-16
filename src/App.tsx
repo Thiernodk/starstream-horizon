@@ -31,13 +31,13 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
-          <Route path="/admin" element={<Admin />} />
           <Route path="/" element={<Layout />}>
             <Route index element={<Index />} />
             <Route path="tv" element={<TV />} />
             <Route path="radios" element={<Radios />} />
             <Route path="vod" element={<VOD />} />
             <Route path="menu" element={<Menu />} />
+            <Route path="admin" element={<Admin />} />
             <Route path="dvb-t2" element={<DVBT2 />} />
             <Route path="subscription" element={<Subscription />} />
             <Route path="profile" element={<Profile />} />
