@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useM3UParser } from "@/hooks/useM3UParser";
 import TVPlayer from "@/components/tv/TVPlayer";
+import { VODPlayer } from "@/components/tv/VODPlayer";
 import { SourcesDialog } from "@/components/tv/SourcesDialog";
 import { toast } from "@/hooks/use-toast";
 
@@ -18,9 +19,10 @@ type ChannelItem = {
   source?: string;
   tvgId?: string;
   epgUrl?: string;
+  hasEmbeddedPlayer?: boolean; // Pour les contenus VOD avec lecteur intégré (Dacast, Castr, etc.)
 };
 
-const TABS = ["Favoris", "Toutes les chaînes", "Sport", "Cinéma", "MOOV vs N.S Stream"] as const;
+const TABS = ["Favoris", "Toutes les chaînes", "Sport", "Cinéma", "ACADEMY TV"] as const;
 type TabKey = typeof TABS[number];
 
 const TV = () => {
@@ -52,7 +54,8 @@ const TV = () => {
       url: ch.url,
       source: ch.source || "Default",
       tvgId: ch.tvgId,
-      epgUrl: ch.epgUrl
+      epgUrl: ch.epgUrl,
+      hasEmbeddedPlayer: ch.hasEmbeddedPlayer
     }));
   }, [m3uChannels]);
 
@@ -77,9 +80,9 @@ const TV = () => {
     } else if (activeTab === "Favoris") {
       // No favorites system yet – keep it simple
       list = [];
-    } else if (activeTab === "MOOV vs N.S Stream") {
-      // Catégorie spéciale - les chaînes ajoutées ici ne font pas partie des catégories normales
-      list = list.filter(c => c.category === "MOOV vs N.S Stream");
+    } else if (activeTab === "ACADEMY TV") {
+      // Catégorie spéciale - les contenus ajoutés ici ne font pas partie des catégories normales
+      list = list.filter(c => c.category === "ACADEMY TV");
     }
 
     if (searchQuery.trim()) {
@@ -109,11 +112,11 @@ const TV = () => {
     });
   };
 
-  const handleAddChannel = (channel: { name: string; url: string; logo: string; group: string; sourceId: string }) => {
+  const handleAddChannel = (channel: { name: string; url: string; logo: string; group: string; sourceId: string; hasEmbeddedPlayer?: boolean }) => {
     addCustomChannel(channel);
     toast({
-      title: "Chaîne ajoutée",
-      description: `La chaîne "${channel.name}" a été ajoutée avec succès.`,
+      title: channel.hasEmbeddedPlayer ? "Contenu VOD ajouté" : "Chaîne ajoutée",
+      description: `${channel.hasEmbeddedPlayer ? "Le contenu" : "La chaîne"} "${channel.name}" a été ${channel.hasEmbeddedPlayer ? "ajouté" : "ajoutée"} avec succès.`,
     });
     // Refresh channels after adding new channel
     setTimeout(() => refresh(), 500);
@@ -125,8 +128,22 @@ const TV = () => {
     }
   }, [filtered, selectedChannel]);
 
-  // Use TV Player when a channel is selected
+  // Use VOD Player for embedded content, TV Player for normal channels
   if (showPlayer && selectedChannel) {
+    if (selectedChannel.hasEmbeddedPlayer) {
+      return (
+        <VODPlayer
+          content={{
+            id: selectedChannel.id,
+            name: selectedChannel.name,
+            url: selectedChannel.url,
+            logo: selectedChannel.logo
+          }}
+          onBack={() => setShowPlayer(false)}
+        />
+      );
+    }
+    
     return (
       <TVPlayer
         channel={selectedChannel}
