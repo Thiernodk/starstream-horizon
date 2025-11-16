@@ -51,7 +51,11 @@ const Auth = () => {
       });
       
       setIsLoading(true);
-      await signIn(validated.email, validated.password);
+      const result = await signIn(validated.email, validated.password);
+      
+      if (result.data && !result.error) {
+        navigate("/", { replace: true });
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         error.errors.forEach((err) => {
@@ -74,7 +78,11 @@ const Auth = () => {
       });
       
       setIsLoading(true);
-      await signUp(validated.email, validated.password, validated.fullName);
+      const result = await signUp(validated.email, validated.password, validated.fullName);
+      
+      if (result.data && !result.error) {
+        navigate("/", { replace: true });
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         error.errors.forEach((err) => {
