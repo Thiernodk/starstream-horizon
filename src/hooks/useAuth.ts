@@ -84,6 +84,11 @@ export const useAuth = () => {
         description: "Bienvenue sur N.S Stream!",
       });
 
+      // Force immediate redirect on successful signup
+      if (data.user) {
+        window.location.href = "/";
+      }
+
       return { data, error: null };
     } catch (error: any) {
       toast({
@@ -108,6 +113,11 @@ export const useAuth = () => {
         title: "Connexion réussie",
         description: "Bon retour!",
       });
+
+      // Force immediate redirect on successful login
+      if (data.user) {
+        window.location.href = "/";
+      }
 
       return { data, error: null };
     } catch (error: any) {
