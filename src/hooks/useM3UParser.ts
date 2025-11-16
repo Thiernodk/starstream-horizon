@@ -9,6 +9,7 @@ interface Channel {
   source?: string;
   tvgId?: string;
   epgUrl?: string;
+  hasEmbeddedPlayer?: boolean;
 }
 
 interface CustomSource {
@@ -146,7 +147,8 @@ export const useM3UParser = (defaultM3uUrl: string) => {
         logo: ch.logo,
         url: ch.url,
         group: ch.group,
-        source: customSources.find(s => s.id === ch.sourceId)?.name || 'Manual'
+        source: customSources.find(s => s.id === ch.sourceId)?.name || 'Manual',
+        hasEmbeddedPlayer: ch.hasEmbeddedPlayer
       }));
 
       const allChannels = [...defaultChannels, ...customM3UChannels, ...manualChannels];
