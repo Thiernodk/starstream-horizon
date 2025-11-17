@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Plus, Edit } from "lucide-react";
+import { Trash2, Plus, Edit, MoveUp, MoveDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Channel {
   id: string;
@@ -21,6 +22,18 @@ interface Channel {
   group_title: string | null;
 }
 
+interface VODContent {
+  id: string;
+  title: string;
+  url: string;
+  description: string | null;
+  thumbnail: string | null;
+  category: string;
+  order_position: number;
+  created_at: string;
+  updated_at: string;
+}
+
 const Admin = () => {
   const navigate = useNavigate();
   const { isAdmin, loading } = useAuth();
@@ -29,7 +42,12 @@ const Admin = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
   
-  // Form state
+  // VOD state
+  const [vodContents, setVodContents] = useState<VODContent[]>([]);
+  const [isVodDialogOpen, setIsVodDialogOpen] = useState(false);
+  const [editingVod, setEditingVod] = useState<VODContent | null>(null);
+  
+  // Form state for channels
   const [formData, setFormData] = useState({
     name: "",
     logo: "",
@@ -37,6 +55,15 @@ const Admin = () => {
     category: "",
     tvg_id: "",
     group_title: "",
+  });
+
+  // Form state for VOD
+  const [vodFormData, setVodFormData] = useState({
+    title: "",
+    url: "",
+    description: "",
+    thumbnail: "",
+    category: "ACADEMY TV",
   });
 
   useEffect(() => {
@@ -53,6 +80,7 @@ const Admin = () => {
   useEffect(() => {
     if (isAdmin) {
       loadChannels();
+      loadVodContents();
     }
   }, [isAdmin]);
 
@@ -72,6 +100,24 @@ const Admin = () => {
     }
 
     setChannels(data || []);
+  };
+
+  const loadVodContents = async () => {
+    const { data, error } = await supabase
+      .from("vod_contents")
+      .select("*")
+      .order("order_position");
+
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les contenus VOD",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setVodContents(data || []);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -156,6 +202,129 @@ const Admin = () => {
     loadChannels();
   };
 
+  const handleVodSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (editingVod) {
+      const { error } = await supabase
+        .from("vod_contents")
+        .update(vodFormData)
+        .eq("id", editingVod.id);
+
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de modifier le contenu VOD",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Contenu modifié",
+        description: "Le contenu VOD a été modifié avec succès",
+      });
+    } else {
+      // Get the max order position and add 1
+      const maxOrder = vodContents.reduce((max, vod) => Math.max(max, vod.order_position), -1);
+      
+      const { error } = await supabase
+        .from("vod_contents")
+        .insert({ ...vodFormData, order_position: maxOrder + 1 });
+
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: "Impossible d'ajouter le contenu VOD",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Contenu ajouté",
+        description: "Le contenu VOD a été ajouté avec succès",
+      });
+    }
+
+    setIsVodDialogOpen(false);
+    setEditingVod(null);
+    setVodFormData({
+      title: "",
+      url: "",
+      description: "",
+      thumbnail: "",
+      category: "ACADEMY TV",
+    });
+    loadVodContents();
+  };
+
+  const handleVodDelete = async (id: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer ce contenu VOD ?")) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from("vod_contents")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le contenu VOD",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Contenu supprimé",
+      description: "Le contenu VOD a été supprimé avec succès",
+    });
+    loadVodContents();
+  };
+
+  const moveVodUp = async (vod: VODContent) => {
+    const currentIndex = vodContents.findIndex(v => v.id === vod.id);
+    if (currentIndex === 0) return;
+
+    const prevVod = vodContents[currentIndex - 1];
+    
+    // Swap order positions
+    await supabase
+      .from("vod_contents")
+      .update({ order_position: prevVod.order_position })
+      .eq("id", vod.id);
+
+    await supabase
+      .from("vod_contents")
+      .update({ order_position: vod.order_position })
+      .eq("id", prevVod.id);
+
+    loadVodContents();
+  };
+
+  const moveVodDown = async (vod: VODContent) => {
+    const currentIndex = vodContents.findIndex(v => v.id === vod.id);
+    if (currentIndex === vodContents.length - 1) return;
+
+    const nextVod = vodContents[currentIndex + 1];
+    
+    // Swap order positions
+    await supabase
+      .from("vod_contents")
+      .update({ order_position: nextVod.order_position })
+      .eq("id", vod.id);
+
+    await supabase
+      .from("vod_contents")
+      .update({ order_position: vod.order_position })
+      .eq("id", nextVod.id);
+
+    loadVodContents();
+  };
+
   const openEditDialog = (channel: Channel) => {
     setEditingChannel(channel);
     setFormData({
@@ -182,6 +351,30 @@ const Admin = () => {
     setIsDialogOpen(true);
   };
 
+  const openVodEditDialog = (vod: VODContent) => {
+    setEditingVod(vod);
+    setVodFormData({
+      title: vod.title,
+      url: vod.url,
+      description: vod.description || "",
+      thumbnail: vod.thumbnail || "",
+      category: vod.category,
+    });
+    setIsVodDialogOpen(true);
+  };
+
+  const openVodAddDialog = () => {
+    setEditingVod(null);
+    setVodFormData({
+      title: "",
+      url: "",
+      description: "",
+      thumbnail: "",
+      category: "ACADEMY TV",
+    });
+    setIsVodDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -200,8 +393,9 @@ const Admin = () => {
         <h1 className="text-3xl font-bold text-white mb-6">Administration</h1>
 
         <Tabs defaultValue="channels" className="w-full">
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="channels">Chaînes TV</TabsTrigger>
+            <TabsTrigger value="vod">ACADEMY TV</TabsTrigger>
             <TabsTrigger value="users">Utilisateurs</TabsTrigger>
             <TabsTrigger value="content">Contenu</TabsTrigger>
           </TabsList>
@@ -335,6 +529,155 @@ const Admin = () => {
                     <p className="text-center text-muted-foreground py-8">
                       Aucune chaîne disponible
                     </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="vod" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Contenus VOD - ACADEMY TV</CardTitle>
+                    <CardDescription>Gérer les contenus VOD avec lecteur intégré</CardDescription>
+                  </div>
+                  <Dialog open={isVodDialogOpen} onOpenChange={setIsVodDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button onClick={openVodAddDialog}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Ajouter un contenu VOD
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>{editingVod ? "Modifier" : "Ajouter"} un contenu VOD</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={handleVodSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="vod-title">Titre *</Label>
+                          <Input
+                            id="vod-title"
+                            value={vodFormData.title}
+                            onChange={(e) => setVodFormData({ ...vodFormData, title: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="vod-url">URL du contenu VOD (iframe embed) *</Label>
+                          <Input
+                            id="vod-url"
+                            value={vodFormData.url}
+                            onChange={(e) => setVodFormData({ ...vodFormData, url: e.target.value })}
+                            placeholder="https://iframe.dacast.com/..."
+                            required
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            URL d'embed des plateformes comme Dacast, Castr, etc.
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="vod-description">Description</Label>
+                          <Textarea
+                            id="vod-description"
+                            value={vodFormData.description}
+                            onChange={(e) => setVodFormData({ ...vodFormData, description: e.target.value })}
+                            rows={3}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="vod-thumbnail">URL de la miniature</Label>
+                          <Input
+                            id="vod-thumbnail"
+                            value={vodFormData.thumbnail}
+                            onChange={(e) => setVodFormData({ ...vodFormData, thumbnail: e.target.value })}
+                            placeholder="https://..."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="vod-category">Catégorie</Label>
+                          <Input
+                            id="vod-category"
+                            value={vodFormData.category}
+                            onChange={(e) => setVodFormData({ ...vodFormData, category: e.target.value })}
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" variant="outline" onClick={() => setIsVodDialogOpen(false)}>
+                            Annuler
+                          </Button>
+                          <Button type="submit">
+                            {editingVod ? "Modifier" : "Ajouter"}
+                          </Button>
+                        </div>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {vodContents.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">
+                      Aucun contenu VOD pour le moment
+                    </p>
+                  ) : (
+                    vodContents.map((vod, index) => (
+                      <div
+                        key={vod.id}
+                        className="flex items-center justify-between p-4 bg-muted rounded-lg"
+                      >
+                        <div className="flex items-center gap-4 flex-1">
+                          {vod.thumbnail && (
+                            <img src={vod.thumbnail} alt={vod.title} className="w-16 h-12 object-cover rounded" />
+                          )}
+                          <div className="flex-1">
+                            <p className="font-medium">{vod.title}</p>
+                            {vod.description && (
+                              <p className="text-sm text-muted-foreground line-clamp-1">{vod.description}</p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-1">{vod.category}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => moveVodUp(vod)}
+                            disabled={index === 0}
+                            title="Monter"
+                          >
+                            <MoveUp className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => moveVodDown(vod)}
+                            disabled={index === vodContents.length - 1}
+                            title="Descendre"
+                          >
+                            <MoveDown className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => openVodEditDialog(vod)}
+                            title="Modifier"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => handleVodDelete(vod.id)}
+                            title="Supprimer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
                   )}
                 </div>
               </CardContent>
