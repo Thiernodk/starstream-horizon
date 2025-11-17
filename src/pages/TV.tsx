@@ -8,6 +8,7 @@ import TVPlayer from "@/components/tv/TVPlayer";
 import { VODPlayer } from "@/components/tv/VODPlayer";
 import { SourcesDialog } from "@/components/tv/SourcesDialog";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 type ChannelItem = {
   id: string;
@@ -44,8 +45,56 @@ const TV = () => {
     refresh
   } = useM3UParser("https://iptv-org.github.io/iptv/languages/fra.m3u");
 
+  const [vodContents, setVodContents] = useState<ChannelItem[]>([]);
+
+  // Load VOD contents from Supabase
+  useEffect(() => {
+    const loadVodContents = async () => {
+      const { data, error } = await supabase
+        .from("vod_contents")
+        .select("*")
+        .order("order_position");
+
+      if (data) {
+        const vodChannels: ChannelItem[] = data.map(vod => ({
+          id: vod.id,
+          name: vod.title,
+          logo: vod.thumbnail || "https://via.placeholder.com/48",
+          category: vod.category,
+          isLive: false,
+          url: vod.url,
+          source: "ACADEMY TV",
+          hasEmbeddedPlayer: true
+        }));
+        setVodContents(vodChannels);
+      }
+    };
+
+    loadVodContents();
+
+    // Subscribe to changes
+    const channel = supabase
+      .channel('vod_contents_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'vod_contents'
+        },
+        () => {
+          loadVodContents();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const channels: ChannelItem[] = useMemo(() => {
-    return m3uChannels.map(ch => ({
+    const m3uMappedChannels = m3uChannels.map(ch => ({
       id: ch.id,
       name: ch.name,
       logo: ch.logo,
@@ -57,7 +106,10 @@ const TV = () => {
       epgUrl: ch.epgUrl,
       hasEmbeddedPlayer: ch.hasEmbeddedPlayer
     }));
-  }, [m3uChannels]);
+
+    // Combine M3U channels with VOD contents
+    return [...m3uMappedChannels, ...vodContents];
+  }, [m3uChannels, vodContents]);
 
   // Get unique sources for filter
   const availableSources = useMemo(() => {
