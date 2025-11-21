@@ -17,9 +17,11 @@ export const useAuth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Check admin status after state is set
+        // Defer Supabase calls with setTimeout to prevent deadlock
         if (session?.user) {
-          checkAdminStatus(session.user.id);
+          setTimeout(() => {
+            checkAdminStatus(session.user.id);
+          }, 0);
         } else {
           setIsAdmin(false);
         }
