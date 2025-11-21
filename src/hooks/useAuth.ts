@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -9,7 +9,6 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminChecked, setAdminChecked] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -88,10 +87,8 @@ export const useAuth = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Compte créé avec succès",
-        description: "Bienvenue sur N.S Stream!",
-      });
+      toast.success("Compte créé avec succès");
+      toast.info("Bienvenue sur N.S Stream!");
 
       // Force immediate redirect on successful signup
       if (data.user) {
@@ -100,11 +97,7 @@ export const useAuth = () => {
 
       return { data, error: null };
     } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message || "Impossible de créer le compte",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Impossible de créer le compte");
       return { data: null, error };
     }
   };
@@ -118,10 +111,8 @@ export const useAuth = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Connexion réussie",
-        description: "Bon retour!",
-      });
+      toast.success("Connexion réussie");
+      toast.info("Bon retour!");
 
       // Force immediate redirect on successful login
       if (data.user) {
@@ -130,11 +121,7 @@ export const useAuth = () => {
 
       return { data, error: null };
     } catch (error: any) {
-      toast({
-        title: "Erreur de connexion",
-        description: error.message || "Email ou mot de passe incorrect",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Email ou mot de passe incorrect");
       return { data: null, error };
     }
   };
@@ -144,16 +131,9 @@ export const useAuth = () => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
-      toast({
-        title: "Déconnexion réussie",
-        description: "À bientôt!",
-      });
+      toast.success("Déconnexion réussie");
     } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message || "Impossible de se déconnecter",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Impossible de se déconnecter");
     }
   };
 
