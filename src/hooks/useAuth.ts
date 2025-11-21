@@ -13,23 +13,19 @@ export const useAuth = () => {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
-        // Defer Supabase calls with setTimeout to prevent deadlock
-        if (session?.user) {
-          setTimeout(() => {
-            checkAdminStatus(session.user.id);
-          }, 0);
-        } else {
+
+        // Ne décide pas du rôle admin ici, on attend la vérification centralisée
+        if (!session?.user) {
           setIsAdmin(false);
           setAdminChecked(true);
         }
       }
     );
 
-    // THEN check for existing session
+    // THEN check for existing session (source unique de vérité pour le rôle admin)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -37,6 +33,7 @@ export const useAuth = () => {
       if (session?.user) {
         checkAdminStatus(session.user.id);
       } else {
+        setIsAdmin(false);
         setAdminChecked(true);
       }
       setLoading(false);
@@ -47,24 +44,23 @@ export const useAuth = () => {
 
   const checkAdminStatus = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .eq('role', 'admin')
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('has_role', {
+        _user_id: userId,
+        _role: 'admin',
+      });
 
       if (error) {
-        console.error('Error checking admin status:', error);
+        console.error('Error checking admin status via RPC:', error);
         setIsAdmin(false);
         setAdminChecked(true);
         return;
       }
 
+      // data est un booléen retourné par la fonction has_role
       setIsAdmin(!!data);
       setAdminChecked(true);
     } catch (error) {
-      console.error('Error checking admin status:', error);
+      console.error('Error checking admin status via RPC:', error);
       setIsAdmin(false);
       setAdminChecked(true);
     }
