@@ -1,142 +1,222 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Play, Info, ArrowRight } from "lucide-react";
+import { Play, Radio } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import strangerThingsPoster from "@/assets/stranger-things-poster.jpg";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const tvChannels = [
-    { id: "1", name: "TF1", logo: "https://via.placeholder.com/80x80/DC2626/FFFFFF?text=TF1" },
-    { id: "2", name: "France 2", logo: "https://via.placeholder.com/80x80/1D4ED8/FFFFFF?text=F2" },
-    { id: "3", name: "RTS 1", logo: "https://via.placeholder.com/80x80/DC2626/FFFFFF?text=RTS" },
-    { id: "4", name: "Canal+", logo: "https://via.placeholder.com/80x80/000000/FFFFFF?text=C+" },
-    { id: "5", name: "M6", logo: "https://via.placeholder.com/80x80/7C3AED/FFFFFF?text=M6" },
-  ];
-
-  const movies = [
+  const recommendedContent = [
     {
       id: "1",
-      title: "Elvis",
-      poster: "https://via.placeholder.com/200x300/F59E0B/FFFFFF?text=ELVIS",
+      title: "Le Bureau des Légendes",
+      genre: "Drame, Espionnage",
+      poster: "https://via.placeholder.com/280x400/4A5568/FFFFFF?text=Le+Bureau",
     },
     {
       id: "2",
-      title: "Lucy",
-      poster: "https://via.placeholder.com/200x300/6B7280/FFFFFF?text=LUCY",
+      title: "Dix pour cent",
+      genre: "Comédie",
+      poster: "https://via.placeholder.com/280x400/059669/FFFFFF?text=Dix+pour+cent",
+    },
+  ];
+
+  const popularMovies = [
+    {
+      id: "1",
+      title: "Intouchables",
+      genre: "Comédie, Drame",
+      poster: "https://via.placeholder.com/200x300/F59E0B/FFFFFF?text=Intouchables",
     },
     {
-      id: "3", 
-      title: "Black Panther",
-      poster: "https://via.placeholder.com/200x300/059669/FFFFFF?text=BP",
+      id: "2",
+      title: "La Haine",
+      genre: "Drame",
+      poster: "https://via.placeholder.com/200x300/1F2937/FFFFFF?text=La+Haine",
+    },
+    {
+      id: "3",
+      title: "Amélie",
+      genre: "Comédie, Romance",
+      poster: "https://via.placeholder.com/200x300/DC2626/FFFFFF?text=Amélie",
+    },
+  ];
+
+  const radios = [
+    {
+      id: "1",
+      name: "France Inter",
+      category: "Talk",
+      logo: "https://via.placeholder.com/80x80/0EA5E9/FFFFFF?text=FI",
+      color: "bg-blue-500",
+    },
+    {
+      id: "2",
+      name: "France Info",
+      category: "News",
+      logo: "https://via.placeholder.com/80x80/DC2626/FFFFFF?text=FI",
+      color: "bg-red-500",
+    },
+    {
+      id: "3",
+      name: "Europe 1",
+      category: "Talk",
+      logo: "https://via.placeholder.com/80x80/1F2937/FFFFFF?text=E1",
+      color: "bg-gray-800",
     },
     {
       id: "4",
-      title: "Avatar",
-      poster: "https://via.placeholder.com/200x300/0EA5E9/FFFFFF?text=AVATAR",
+      name: "RTL",
+      category: "Talk",
+      logo: "https://via.placeholder.com/80x80/F59E0B/FFFFFF?text=RTL",
+      color: "bg-orange-500",
     },
   ];
 
   return (
-    <div className="min-h-screen px-4 md:px-8 py-4 md:py-6">
-      {/* Featured Content Section */}
-      <section className="mb-8 md:mb-12">
-        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4 md:mb-6">À la Une</h2>
-        <div className="relative aspect-[16/9] md:aspect-[21/9] rounded-xl md:rounded-2xl overflow-hidden shadow-glow">
-          <img
-            src={strangerThingsPoster}
-            alt="Stranger Things"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
-          
-          <div className="absolute bottom-0 left-0 p-4 md:p-12 text-white max-w-2xl">
-            <div className="mb-2 md:mb-3">
-              <img src="https://via.placeholder.com/120x50/DC2626/FFFFFF?text=NETFLIX" alt="Netflix" className="h-5 md:h-8" />
-            </div>
-            <h3 className="text-2xl md:text-6xl font-bold mb-2 md:mb-6">STRANGER THINGS</h3>
-            <p className="text-sm md:text-lg text-white/90 mb-4 md:mb-8 leading-relaxed line-clamp-2 md:line-clamp-none">
-              Quand un garçon disparaît, une petite ville découvre un mystère impliquant des expériences secrètes.
-            </p>
-            <div className="flex gap-2 md:gap-4">
-              <Button variant="hero" size="sm" className="gap-2 text-sm md:text-lg md:px-8 md:py-6 md:h-auto">
-                <Play className="w-4 h-4 md:w-6 md:h-6" />
-                <span className="hidden md:inline">Regarder maintenant</span>
-                <span className="md:hidden">Regarder</span>
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2 text-sm md:text-lg md:px-8 md:py-6 md:h-auto bg-white/10 text-white border-white/30 hover:bg-white/20">
-                <Info className="w-4 h-4 md:w-6 md:h-6" />
-                <span className="hidden md:inline">Plus d'infos</span>
-                <span className="md:hidden">Info</span>
-              </Button>
-            </div>
+    <div className="min-h-screen px-4 md:px-6 py-4 md:py-6">
+      {/* Header with greeting */}
+      <section className="mb-6 md:mb-8">
+        <div className="flex items-center gap-3 md:gap-4">
+          <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-bold text-lg md:text-2xl">
+            {user?.email?.charAt(0).toUpperCase() || "U"}
+          </div>
+          <div>
+            <p className="text-sm md:text-base text-muted-foreground">Bonjour,</p>
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">
+              {user?.email?.split("@")[0] || "Utilisateur"}
+            </h1>
           </div>
         </div>
       </section>
 
-      {/* TV Channels Section */}
+      {/* Recommandé pour vous */}
       <section className="mb-8 md:mb-12">
         <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h2 className="text-xl md:text-3xl font-bold text-foreground">Chaînes TV en Direct</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">Recommandé pour vous</h2>
           <Button
             variant="ghost"
-            onClick={() => navigate("/tv")}
-            className="text-muted-foreground hover:text-foreground gap-1 md:gap-2 text-sm md:text-base"
+            onClick={() => navigate("/vod")}
+            className="text-primary hover:text-primary/80 text-sm md:text-base font-semibold"
           >
-            <span className="hidden md:inline">Tout afficher</span>
-            <span className="md:hidden">Tout</span>
-            <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+            Voir plus
           </Button>
         </div>
-        <div className="flex gap-3 md:gap-6 overflow-x-auto pb-4">
-          {tvChannels.map((channel) => (
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
+          {recommendedContent.map((content) => (
             <Card
-              key={channel.id}
-              className="shrink-0 w-20 h-20 md:w-32 md:h-32 p-2 md:p-4 bg-card border-2 border-border cursor-pointer hover:border-primary hover:scale-105 hover:shadow-glow transition-all duration-200"
-              onClick={() => navigate("/tv")}
+              key={content.id}
+              className="relative overflow-hidden cursor-pointer group hover:shadow-glow transition-all duration-300"
+              onClick={() => navigate("/vod")}
             >
-              <img
-                src={channel.logo}
-                alt={channel.name}
-                className="w-full h-full object-contain"
-              />
+              <div className="relative aspect-[16/10] overflow-hidden rounded-lg">
+                <img
+                  src={content.poster}
+                  alt={content.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-14 h-14 md:w-16 md:h-16 rounded-full bg-black/60 hover:bg-black/80 text-white"
+                >
+                  <Play className="w-6 h-6 md:w-8 md:h-8 fill-white" />
+                </Button>
+                <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
+                  <h3 className="text-white font-bold text-sm md:text-base mb-1">
+                    {content.title}
+                  </h3>
+                  <p className="text-white/80 text-xs md:text-sm">{content.genre}</p>
+                </div>
+              </div>
             </Card>
           ))}
         </div>
       </section>
 
-      {/* Movies and Series Section */}
+      {/* Films et séries populaires */}
       <section className="mb-8 md:mb-12">
         <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h2 className="text-xl md:text-3xl font-bold text-foreground">Films et Séries</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">Films et séries populaires</h2>
           <Button
             variant="ghost"
             onClick={() => navigate("/vod")}
-            className="text-muted-foreground hover:text-foreground gap-1 md:gap-2 text-sm md:text-base"
+            className="text-primary hover:text-primary/80 text-sm md:text-base font-semibold"
           >
-            <span className="hidden md:inline">Tout afficher</span>
-            <span className="md:hidden">Tout</span>
-            <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+            Voir plus
           </Button>
         </div>
-        <div className="flex gap-3 md:gap-6 overflow-x-auto pb-4">
-          {movies.map((movie) => (
+        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 scrollbar-hide">
+          {popularMovies.map((movie) => (
             <Card
               key={movie.id}
-              className="shrink-0 w-32 md:w-48 aspect-[2/3] p-0 bg-transparent overflow-hidden cursor-pointer hover:scale-105 hover:shadow-glow transition-all duration-300 group"
+              className="shrink-0 w-32 md:w-44 overflow-hidden cursor-pointer hover:scale-105 hover:shadow-glow transition-all duration-300 group"
               onClick={() => navigate("/vod")}
             >
-              <div className="relative h-full">
+              <div className="relative aspect-[2/3]">
                 <img
                   src={movie.poster}
                   alt={movie.title}
-                  className="w-full h-full object-cover rounded-xl"
+                  className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-overlay opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
-                <div className="absolute bottom-0 left-0 right-0 p-2 md:p-4">
-                  <p className="text-white text-sm md:text-base font-semibold drop-shadow-lg">{movie.title}</p>
+                <div className="absolute inset-0 bg-gradient-overlay opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div className="p-2 md:p-3 bg-card">
+                <h3 className="font-bold text-sm md:text-base text-foreground line-clamp-1 mb-1">
+                  {movie.title}
+                </h3>
+                <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">
+                  {movie.genre}
+                </p>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Radios */}
+      <section className="mb-8 md:mb-12">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">Radios</h2>
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/radios")}
+            className="text-primary hover:text-primary/80 text-sm md:text-base font-semibold"
+          >
+            Voir plus
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
+          {radios.map((radio) => (
+            <Card
+              key={radio.id}
+              className="p-4 cursor-pointer hover:shadow-glow transition-all duration-300 hover:scale-[1.02]"
+              onClick={() => navigate("/radios")}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-14 h-14 md:w-16 md:h-16 rounded-xl ${radio.color} flex items-center justify-center shrink-0`}>
+                  <img src={radio.logo} alt={radio.name} className="w-10 h-10 md:w-12 md:h-12 object-contain" />
                 </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-sm md:text-base text-foreground truncate">
+                    {radio.name}
+                  </h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">{radio.category}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 text-primary hover:text-primary/80"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate("/radios");
+                  }}
+                >
+                  <Radio className="w-5 h-5" />
+                </Button>
               </div>
             </Card>
           ))}
