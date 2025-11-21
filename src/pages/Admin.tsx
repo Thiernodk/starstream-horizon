@@ -36,7 +36,7 @@ interface VODContent {
 
 const Admin = () => {
   const navigate = useNavigate();
-  const { isAdmin, loading } = useAuth();
+  const { user, isAdmin, loading, adminChecked } = useAuth();
   const { toast } = useToast();
   const [channels, setChannels] = useState<Channel[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -67,15 +67,25 @@ const Admin = () => {
   });
 
   useEffect(() => {
-    if (!loading && !isAdmin) {
-      navigate("/");
-      toast({
-        title: "Accès refusé",
-        description: "Vous devez être administrateur pour accéder à cette page",
-        variant: "destructive",
-      });
+    // Attendre que le statut admin ait été vérifié avant de rediriger
+    if (!loading && adminChecked) {
+      if (!user) {
+        navigate("/auth");
+        toast({
+          title: "Connexion requise",
+          description: "Veuillez vous connecter pour accéder à cette page",
+          variant: "destructive",
+        });
+      } else if (!isAdmin) {
+        navigate("/");
+        toast({
+          title: "Accès refusé",
+          description: "Vous devez être administrateur pour accéder à cette page",
+          variant: "destructive",
+        });
+      }
     }
-  }, [isAdmin, loading, navigate, toast]);
+  }, [user, isAdmin, loading, adminChecked, navigate, toast]);
 
   useEffect(() => {
     if (isAdmin) {

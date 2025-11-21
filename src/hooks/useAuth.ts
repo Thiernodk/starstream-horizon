@@ -8,6 +8,7 @@ export const useAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminChecked, setAdminChecked] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -24,6 +25,7 @@ export const useAuth = () => {
           }, 0);
         } else {
           setIsAdmin(false);
+          setAdminChecked(true);
         }
       }
     );
@@ -35,6 +37,8 @@ export const useAuth = () => {
       
       if (session?.user) {
         checkAdminStatus(session.user.id);
+      } else {
+        setAdminChecked(true);
       }
       setLoading(false);
     });
@@ -54,13 +58,16 @@ export const useAuth = () => {
       if (error) {
         console.error('Error checking admin status:', error);
         setIsAdmin(false);
+        setAdminChecked(true);
         return;
       }
 
       setIsAdmin(!!data);
+      setAdminChecked(true);
     } catch (error) {
       console.error('Error checking admin status:', error);
       setIsAdmin(false);
+      setAdminChecked(true);
     }
   };
 
@@ -155,6 +162,7 @@ export const useAuth = () => {
     session,
     loading,
     isAdmin,
+    adminChecked,
     signUp,
     signIn,
     signOut,
