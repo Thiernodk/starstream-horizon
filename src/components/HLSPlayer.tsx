@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import Hls from "hls.js";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import type Hls from "hls.js";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings, RotateCcw, RotateCw, Pause, Play, Volume2, VolumeX, Maximize, Minimize } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
@@ -36,12 +36,14 @@ const HLSPlayer = ({
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const hideControlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const hideControlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Initialize HLS player
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    let hls: Hls | null = null;
 
     const initPlayer = async () => {
       setIsLoading(true);
@@ -56,9 +58,13 @@ const HLSPlayer = ({
       // Check if it's an HLS stream
       const isHlsStream = src.includes('.m3u8') || src.includes('.m3u');
 
-      if (isHlsStream && Hls.isSupported()) {
+      // Dynamic import to avoid bundling issues
+      const HlsModule = await import("hls.js");
+      const HlsClass = HlsModule.default;
+
+      if (isHlsStream && HlsClass.isSupported()) {
         // Use HLS.js for browsers that don't support HLS natively
-        const hls = new Hls({
+        hls = new HlsClass({
           enableWorker: true,
           lowLatencyMode: true,
           backBufferLength: 90,
@@ -66,18 +72,18 @@ const HLSPlayer = ({
           maxMaxBufferLength: 60,
           startLevel: -1, // Auto quality
           capLevelToPlayerSize: true,
-          xhrSetup: (xhr) => {
+          xhrSetup: (xhr: XMLHttpRequest) => {
             xhr.withCredentials = false;
           },
         });
 
         hlsRef.current = hls;
 
-        hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+        hls.on(HlsClass.Events.MEDIA_ATTACHED, () => {
           console.log('HLS Media attached');
         });
 
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        hls.on(HlsClass.Events.MANIFEST_PARSED, () => {
           console.log('HLS Manifest parsed');
           setIsLoading(false);
           if (autoplay) {
@@ -85,21 +91,21 @@ const HLSPlayer = ({
           }
         });
 
-        hls.on(Hls.Events.ERROR, (event, data) => {
+        hls.on(HlsClass.Events.ERROR, (_event: string, data: any) => {
           console.error('HLS Error:', data);
           if (data.fatal) {
             switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR:
+              case HlsClass.ErrorTypes.NETWORK_ERROR:
                 console.log('Network error, trying to recover...');
-                hls.startLoad();
+                hls?.startLoad();
                 break;
-              case Hls.ErrorTypes.MEDIA_ERROR:
+              case HlsClass.ErrorTypes.MEDIA_ERROR:
                 console.log('Media error, trying to recover...');
-                hls.recoverMediaError();
+                hls?.recoverMediaError();
                 break;
               default:
                 setError('Erreur de lecture du flux');
-                hls.destroy();
+                hls?.destroy();
                 break;
             }
           }
@@ -261,7 +267,6 @@ const HLSPlayer = ({
         ref={videoRef}
         className="absolute inset-0 w-full h-full object-contain"
         playsInline
-        webkit-playsinline="true"
         poster={poster}
         preload="auto"
       />
@@ -402,7 +407,7 @@ const HLSPlayer = ({
 
       {/* Loading Indicator */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-60">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-[60]">
           <div className="flex flex-col items-center gap-4">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             <p className="text-white/80 text-sm">Chargement...</p>
@@ -412,7 +417,7 @@ const HLSPlayer = ({
 
       {/* Error Display */}
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-60">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[60]">
           <div className="text-center p-6">
             <p className="text-red-400 text-lg mb-4">{error}</p>
             <Button 
