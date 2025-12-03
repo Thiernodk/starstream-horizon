@@ -1,4 +1,4 @@
-import ClapprPlayer from "@/components/ClapprPlayer";
+import HLSPlayer from "@/components/HLSPlayer";
 
 interface TVPlayerProps {
   channel: {
@@ -25,7 +25,7 @@ interface TVPlayerProps {
 
 const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps) => {
   return (
-    <ClapprPlayer
+    <HLSPlayer
       src={channel.url}
       title={channel.name}
       onBack={onBack}
@@ -36,7 +36,6 @@ const TVPlayer = ({ channel, onBack, channels, onChannelChange }: TVPlayerProps)
         description: "Programme en direct",
       }}
       autoplay={true}
-      controls={true}
     />
   );
 };
