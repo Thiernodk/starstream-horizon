@@ -1,4 +1,4 @@
-import ClapprPlayer from "@/components/ClapprPlayer";
+import HLSPlayer from "@/components/HLSPlayer";
 
 interface DVBVideoPlayerProps {
   channel: {
@@ -16,7 +16,7 @@ const DVBVideoPlayer = ({ channel, onBack }: DVBVideoPlayerProps) => {
   const streamUrl = `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`;
 
   return (
-    <ClapprPlayer
+    <HLSPlayer
       src={streamUrl}
       title={channel.name}
       onBack={onBack}
@@ -27,7 +27,6 @@ const DVBVideoPlayer = ({ channel, onBack }: DVBVideoPlayerProps) => {
         description: `Programme TNT HD`,
       }}
       autoplay={false}
-      controls={true}
     />
   );
 };
