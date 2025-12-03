@@ -33,10 +33,13 @@ const TV = () => {
   const [showPlayer, setShowPlayer] = useState(false);
   const [selectedSource, setSelectedSource] = useState<string>("all");
   const [showSourcesDialog, setShowSourcesDialog] = useState(false);
+  const [dbChannels, setDbChannels] = useState<ChannelItem[]>([]);
+  const [vodContents, setVodContents] = useState<ChannelItem[]>([]);
+  const [dbLoading, setDbLoading] = useState(true);
 
   const { 
     channels: m3uChannels, 
-    loading, 
+    loading: m3uLoading, 
     error, 
     customSources,
     addCustomSource,
@@ -45,12 +48,51 @@ const TV = () => {
     refresh
   } = useM3UParser("https://iptv-org.github.io/iptv/languages/fra.m3u");
 
-  const [vodContents, setVodContents] = useState<ChannelItem[]>([]);
+  // Load channels from Supabase database
+  useEffect(() => {
+    const loadDbChannels = async () => {
+      setDbLoading(true);
+      const { data } = await supabase
+        .from("channels")
+        .select("*")
+        .order("name");
+
+      if (data) {
+        const channelItems: ChannelItem[] = data.map(ch => ({
+          id: ch.id,
+          name: ch.name,
+          logo: ch.logo || "https://via.placeholder.com/48",
+          category: ch.category || ch.group_title || "Général",
+          isLive: true,
+          url: ch.url,
+          source: "Admin",
+          tvgId: ch.tvg_id || undefined,
+          hasEmbeddedPlayer: false
+        }));
+        setDbChannels(channelItems);
+      }
+      setDbLoading(false);
+    };
+
+    loadDbChannels();
+
+    // Subscribe to channel changes
+    const channelSub = supabase
+      .channel('channels_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'channels' }, () => {
+        loadDbChannels();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channelSub);
+    };
+  }, []);
 
   // Load VOD contents from Supabase
   useEffect(() => {
     const loadVodContents = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("vod_contents")
         .select("*")
         .order("order_position");
@@ -72,26 +114,20 @@ const TV = () => {
 
     loadVodContents();
 
-    // Subscribe to changes
-    const channel = supabase
+    // Subscribe to VOD changes
+    const vodSub = supabase
       .channel('vod_contents_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'vod_contents'
-        },
-        () => {
-          loadVodContents();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vod_contents' }, () => {
+        loadVodContents();
+      })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(vodSub);
     };
   }, []);
+
+  const loading = m3uLoading || dbLoading;
 
   const channels: ChannelItem[] = useMemo(() => {
     const m3uMappedChannels = m3uChannels.map(ch => ({
@@ -107,9 +143,9 @@ const TV = () => {
       hasEmbeddedPlayer: ch.hasEmbeddedPlayer
     }));
 
-    // Combine M3U channels with VOD contents
-    return [...m3uMappedChannels, ...vodContents];
-  }, [m3uChannels, vodContents]);
+    // Combine: Admin channels first, then M3U channels, then VOD contents
+    return [...dbChannels, ...m3uMappedChannels, ...vodContents];
+  }, [m3uChannels, dbChannels, vodContents]);
 
   // Get unique sources for filter
   const availableSources = useMemo(() => {
