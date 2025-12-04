@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Play, Star, Clock, ArrowLeft } from "lucide-react";
+import { Search, Play, Star, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -118,102 +118,84 @@ const VOD = () => {
   }
 
   return (
-    <div className="min-h-screen px-8 py-6">
+    <div className="min-h-screen px-4 py-4 pb-24">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-foreground mb-2">Vidéo à la Demande</h1>
-        <p className="text-muted-foreground text-lg">
-          Découvrez notre catalogue de films, séries et documentaires
-        </p>
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-foreground">VOD</h1>
+        <p className="text-muted-foreground text-sm">Films, séries et documentaires</p>
       </div>
 
-      <div className="space-y-8">
-        {/* Search and filters */}
-        <div className="flex gap-4 items-center">
-          <div className="relative flex-1 max-w-2xl">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-            <Input
-              placeholder="Rechercher un titre..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 text-base"
-            />
-          </div>
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+        <Input
+          placeholder="Rechercher..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 h-10"
+        />
+      </div>
 
-          <div className="flex gap-3">
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                size="lg"
-                onClick={() => setSelectedCategory(category)}
-                className="whitespace-nowrap"
-              >
-                {category}
-              </Button>
-            ))}
-          </div>
-        </div>
+      {/* Categories - horizontal scroll */}
+      <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+        {categories.map((category) => (
+          <Button
+            key={category}
+            variant={selectedCategory === category ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedCategory(category)}
+            className="whitespace-nowrap shrink-0"
+          >
+            {category}
+          </Button>
+        ))}
+      </div>
 
-        {/* Content grid */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold text-foreground">
-              {selectedCategory === "Tous" ? "Tout le catalogue" : selectedCategory}
-            </h2>
-            <span className="text-base text-muted-foreground">
-              {filteredContent.length} titre{filteredContent.length !== 1 ? 's' : ''}
-            </span>
-          </div>
+      {/* Results count */}
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold text-foreground">
+          {selectedCategory === "Tous" ? "Catalogue" : selectedCategory}
+        </h2>
+        <span className="text-xs text-muted-foreground">
+          {filteredContent.length} titre{filteredContent.length !== 1 ? 's' : ''}
+        </span>
+      </div>
 
-          <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
-            {filteredContent.map((content) => (
-              <Card key={content.id} className="overflow-hidden group hover:shadow-glow transition-all duration-300 hover:scale-105 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary" onClick={() => handleContentClick(content)} tabIndex={0}>
-                <div className="relative aspect-[2/3] overflow-hidden">
-                  <img
-                    src={content.thumbnail}
-                    alt={content.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <Button variant="hero" size="icon" className="w-20 h-20">
-                      <Play className="w-8 h-8" />
-                    </Button>
-                  </div>
-                  
-                  {/* Rating badge */}
-                  <div className="absolute top-3 right-3 bg-black/80 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    {content.rating}
-                  </div>
-                </div>
+      {/* Content grid - mobile optimized */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        {filteredContent.map((content) => (
+          <Card 
+            key={content.id} 
+            className="overflow-hidden group hover:scale-105 transition-all duration-200 cursor-pointer"
+            onClick={() => handleContentClick(content)}
+          >
+            <div className="relative aspect-[2/3] overflow-hidden">
+              <img
+                src={content.thumbnail}
+                alt={content.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Play className="w-10 h-10 text-white" />
+              </div>
+              
+              {/* Rating */}
+              <div className="absolute top-2 right-2 bg-black/70 text-white px-1.5 py-0.5 rounded text-xs flex items-center gap-1">
+                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                {content.rating}
+              </div>
+            </div>
 
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-bold text-base line-clamp-1">{content.title}</h3>
-                    <Badge variant="secondary" className="ml-2 shrink-0">
-                      {content.year}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                    <span>{content.genre}</span>
-                    <span>•</span>
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {content.duration}
-                    </div>
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                    {content.description}
-                  </p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
+            <div className="p-2">
+              <h3 className="font-medium text-sm line-clamp-1">{content.title}</h3>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                <span>{content.genre}</span>
+                <span>•</span>
+                <span>{content.year}</span>
+              </div>
+            </div>
+          </Card>
+        ))}
       </div>
     </div>
   );
