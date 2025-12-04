@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, Tv as TvIcon, Settings } from "lucide-react";
+import { Search, Tv as TvIcon, Settings, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,15 +20,15 @@ type ChannelItem = {
   source?: string;
   tvgId?: string;
   epgUrl?: string;
-  hasEmbeddedPlayer?: boolean; // Pour les contenus VOD avec lecteur intégré (Dacast, Castr, etc.)
+  hasEmbeddedPlayer?: boolean;
 };
 
-const TABS = ["Favoris", "Toutes les chaînes", "Sport", "Cinéma", "ACADEMY TV"] as const;
+const TABS = ["Favoris", "Toutes", "Sport", "Cinéma", "ACADEMY TV"] as const;
 type TabKey = typeof TABS[number];
 
 const TV = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<TabKey>("Toutes les chaînes");
+  const [activeTab, setActiveTab] = useState<TabKey>("Toutes");
   const [selectedChannel, setSelectedChannel] = useState<ChannelItem | null>(null);
   const [showPlayer, setShowPlayer] = useState(false);
   const [selectedSource, setSelectedSource] = useState<string>("all");
@@ -76,7 +76,6 @@ const TV = () => {
 
     loadDbChannels();
 
-    // Subscribe to channel changes
     const channelSub = supabase
       .channel('channels_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'channels' }, () => {
@@ -114,7 +113,6 @@ const TV = () => {
 
     loadVodContents();
 
-    // Subscribe to VOD changes
     const vodSub = supabase
       .channel('vod_contents_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vod_contents' }, () => {
@@ -143,11 +141,9 @@ const TV = () => {
       hasEmbeddedPlayer: ch.hasEmbeddedPlayer
     }));
 
-    // Combine: Admin channels first, then M3U channels, then VOD contents
     return [...dbChannels, ...m3uMappedChannels, ...vodContents];
   }, [m3uChannels, dbChannels, vodContents]);
 
-  // Get unique sources for filter
   const availableSources = useMemo(() => {
     const sources = new Set(channels.map(ch => ch.source).filter(Boolean));
     return ['all', ...Array.from(sources)];
@@ -156,7 +152,6 @@ const TV = () => {
   const filtered = useMemo(() => {
     let list = channels;
 
-    // Filter by source
     if (selectedSource !== "all") {
       list = list.filter(c => c.source === selectedSource);
     }
@@ -166,10 +161,8 @@ const TV = () => {
     } else if (activeTab === "Cinéma") {
       list = list.filter(c => /(cin[eé]ma|movie|film)/i.test(c.category));
     } else if (activeTab === "Favoris") {
-      // No favorites system yet – keep it simple
       list = [];
     } else if (activeTab === "ACADEMY TV") {
-      // Catégorie spéciale - les contenus ajoutés ici ne font pas partie des catégories normales
       list = list.filter(c => c.category === "ACADEMY TV");
     }
 
@@ -187,7 +180,6 @@ const TV = () => {
       title: "Source ajoutée",
       description: `La source "${source.name}" a été ajoutée avec succès.`,
     });
-    // Refresh channels after adding new source
     setTimeout(() => refresh(), 500);
   };
 
@@ -206,7 +198,6 @@ const TV = () => {
       title: channel.hasEmbeddedPlayer ? "Contenu VOD ajouté" : "Chaîne ajoutée",
       description: `${channel.hasEmbeddedPlayer ? "Le contenu" : "La chaîne"} "${channel.name}" a été ${channel.hasEmbeddedPlayer ? "ajouté" : "ajoutée"} avec succès.`,
     });
-    // Refresh channels after adding new channel
     setTimeout(() => refresh(), 500);
   };
 
@@ -216,7 +207,6 @@ const TV = () => {
     }
   }, [filtered, selectedChannel]);
 
-  // Use VOD Player for embedded content, TV Player for normal channels
   if (showPlayer && selectedChannel) {
     if (selectedChannel.hasEmbeddedPlayer) {
       return (
@@ -243,136 +233,118 @@ const TV = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background px-8 py-6">
-      {/* Top section with title */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-foreground mb-2">
-          TV en Direct
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          Regardez vos chaînes préférées en direct
-        </p>
+    <div className="min-h-screen bg-background px-4 py-4 pb-24">
+      {/* Header */}
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-foreground">TV en Direct</h1>
+        <p className="text-muted-foreground text-sm">Regardez vos chaînes préférées</p>
       </div>
 
-      <div className="space-y-8">
-        {/* Tabs */}
-        <div className="flex gap-8 border-b border-border">
-          {TABS.map(tab => (
-            <button
-              key={tab}
-              className={`pb-4 text-lg font-medium whitespace-nowrap transition-colors ${
-                activeTab === tab 
-                  ? "text-primary border-b-2 border-primary" 
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+        <Input
+          placeholder="Rechercher..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 h-10"
+        />
+      </div>
 
-        {/* Controls row */}
-        <div className="flex gap-4 items-center">
-          {/* Search */}
-          <div className="relative flex-1 max-w-2xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-            <Input
-              placeholder="Rechercher une chaîne..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 text-base"
-            />
-          </div>
-
-          {/* Source filter */}
-          <Select value={selectedSource} onValueChange={setSelectedSource}>
-            <SelectTrigger className="w-[220px] h-12">
-              <SelectValue placeholder="Toutes les sources" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes les sources</SelectItem>
-              {availableSources.filter(s => s !== 'all').map(source => (
-                <SelectItem key={source} value={source}>
-                  {source}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
+      {/* Tabs - horizontal scroll */}
+      <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+        {TABS.map(tab => (
           <Button
-            variant="outline"
-            onClick={() => setShowSourcesDialog(true)}
-            className="flex items-center gap-2 h-12 px-6"
+            key={tab}
+            variant={activeTab === tab ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveTab(tab)}
+            className="whitespace-nowrap shrink-0"
           >
-            <Settings className="w-5 h-5" />
-            Sources
+            {tab}
           </Button>
-        </div>
-
-        {/* Content */}
-        {loading && (
-          <div className="text-center py-16">
-            <p className="text-foreground text-lg">Chargement des chaînes...</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-destructive/20 text-destructive-foreground p-6 rounded-lg">
-            <p className="text-lg">Erreur: {error}</p>
-          </div>
-        )}
-
-        {/* Channels grid - larger for Smart TV */}
-        <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-6">
-          {filtered.map((ch) => (
-            <div 
-              key={ch.id}
-              className="group cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl transition-all duration-200"
-              onClick={() => {
-                setSelectedChannel(ch);
-                setShowPlayer(true);
-              }}
-              tabIndex={0}
-            >
-              <div className="aspect-square bg-card border-2 border-border rounded-xl p-6 hover:border-primary hover:shadow-glow hover:scale-105 transition-all duration-200 flex items-center justify-center">
-                <img
-                  src={ch.logo}
-                  alt={ch.name}
-                  className="max-w-full max-h-full object-contain filter brightness-90 group-hover:brightness-110 transition-all duration-200"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://via.placeholder.com/150x100/1f2937/ffffff?text=${encodeURIComponent(
-                      ch.name.slice(0, 3).toUpperCase()
-                    )}`;
-                  }}
-                />
-              </div>
-              <div className="mt-3 text-center">
-                <p className="text-base text-foreground font-semibold truncate">
-                  {ch.name}
-                </p>
-                {ch.category && (
-                  <p className="text-sm text-muted-foreground truncate mt-1">
-                    {ch.category}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {filtered.length === 0 && !loading && (
-            <div className="col-span-full text-center py-20">
-              <div className="text-muted-foreground">
-                <TvIcon className="w-20 h-20 mx-auto mb-6 opacity-50" />
-                <p className="text-2xl font-medium mb-3">Aucune chaîne trouvée</p>
-                <p className="text-lg">Essayez de modifier votre recherche ou de changer de catégorie</p>
-              </div>
-            </div>
-          )}
-        </div>
+        ))}
       </div>
 
-      {/* Sources management dialog */}
+      {/* Source filter & Settings */}
+      <div className="flex gap-2 mb-4">
+        <Select value={selectedSource} onValueChange={setSelectedSource}>
+          <SelectTrigger className="flex-1 h-9">
+            <SelectValue placeholder="Sources" />
+          </SelectTrigger>
+          <SelectContent className="bg-popover border-border">
+            <SelectItem value="all">Toutes les sources</SelectItem>
+            {availableSources.filter(s => s !== 'all').map(source => (
+              <SelectItem key={source} value={source}>
+                {source}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setShowSourcesDialog(true)}
+          className="h-9 w-9 shrink-0"
+        >
+          <Settings className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Loading */}
+      {loading && (
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="bg-destructive/20 text-destructive-foreground p-3 rounded-lg text-sm mb-4">
+          Erreur: {error}
+        </div>
+      )}
+
+      {/* Channels grid - mobile optimized */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+        {filtered.map((ch) => (
+          <div 
+            key={ch.id}
+            className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-lg"
+            onClick={() => {
+              setSelectedChannel(ch);
+              setShowPlayer(true);
+            }}
+            tabIndex={0}
+          >
+            <div className="aspect-square bg-card border border-border rounded-lg p-2 hover:border-primary hover:scale-105 transition-all duration-200 flex items-center justify-center">
+              <img
+                src={ch.logo}
+                alt={ch.name}
+                className="max-w-full max-h-full object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `https://via.placeholder.com/80/1f2937/ffffff?text=${encodeURIComponent(
+                    ch.name.slice(0, 2).toUpperCase()
+                  )}`;
+                }}
+              />
+            </div>
+            <p className="text-xs text-foreground font-medium truncate mt-1 text-center">
+              {ch.name}
+            </p>
+          </div>
+        ))}
+
+        {filtered.length === 0 && !loading && (
+          <div className="col-span-full text-center py-12">
+            <TvIcon className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+            <p className="text-muted-foreground text-sm">Aucune chaîne trouvée</p>
+          </div>
+        )}
+      </div>
+
+      {/* Sources Dialog */}
       <SourcesDialog
         open={showSourcesDialog}
         onOpenChange={setShowSourcesDialog}
